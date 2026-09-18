@@ -6,30 +6,39 @@ import { deleteTargetSchool } from "./actions";
 type TargetSchoolItem = {
   id: string;
   name: string;
-  targetNet: number;
+  location: string | null;
+  quota: number | null;
+  cutoffScore: number | null;
+  targetPercentile: number | null;
   note: string | null;
 };
 
-function statusFor(currentNet: number | null, targetNet: number) {
-  if (currentNet === null) {
-    return { label: "Deneme sonucu yok", color: "bg-gray-100 text-gray-500" };
+// Yüzdelik dilimde küçük değer daha iyi sıralama demektir.
+function statusFor(studentPercentile: number | null, targetPercentile: number | null) {
+  if (targetPercentile === null) {
+    return { label: "Hedef yüzdelik dilim yok", color: "bg-gray-100 text-gray-500" };
   }
-  const diff = currentNet - targetNet;
+  if (studentPercentile === null) {
+    return { label: "Yüzdelik dilim girilmedi", color: "bg-gray-100 text-gray-500" };
+  }
+  const diff = targetPercentile - studentPercentile;
+  const margin = Math.max(targetPercentile * 0.2, 0.5);
+
   if (diff >= 0) {
-    return { label: `+${diff.toFixed(1)} net üstünde`, color: "bg-emerald-100 text-emerald-700" };
+    return { label: `Sıralama yeterli (+${diff.toFixed(2)})`, color: "bg-emerald-100 text-emerald-700" };
   }
-  if (diff >= -5) {
-    return { label: `${diff.toFixed(1)} net (yakın)`, color: "bg-amber-100 text-amber-700" };
+  if (diff >= -margin) {
+    return { label: `Yakın (${diff.toFixed(2)})`, color: "bg-amber-100 text-amber-700" };
   }
-  return { label: `${diff.toFixed(1)} net eksik`, color: "bg-red-100 text-red-700" };
+  return { label: `Sıralama yetersiz (${diff.toFixed(2)})`, color: "bg-red-100 text-red-700" };
 }
 
 export default function TargetSchoolList({
   items,
-  currentNet,
+  studentPercentile,
 }: {
   items: TargetSchoolItem[];
-  currentNet: number | null;
+  studentPercentile: number | null;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -40,15 +49,18 @@ export default function TargetSchoolList({
   return (
     <ul className="space-y-2">
       {items.map((school) => {
-        const status = statusFor(currentNet, school.targetNet);
+        const status = statusFor(studentPercentile, school.targetPercentile);
         return (
           <li key={school.id} className="card flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="font-medium text-gray-900">{school.name}</h3>
               <p className="text-xs text-gray-500">
-                Hedef net: {school.targetNet}
-                {school.note ? ` · ${school.note}` : ""}
+                {school.location ? `${school.location} · ` : ""}
+                Yüzdelik dilim: {school.targetPercentile ?? "-"}
+                {school.cutoffScore ? ` · Puan: ${school.cutoffScore}` : ""}
+                {school.quota ? ` · Kontenjan: ${school.quota}` : ""}
               </p>
+              {school.note && <p className="text-xs text-gray-400">{school.note}</p>}
               <span className={`badge mt-1.5 ${status.color}`}>{status.label}</span>
             </div>
             <button

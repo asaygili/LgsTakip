@@ -4,80 +4,65 @@ import TargetSchoolForm from "./TargetSchoolForm";
 import BulkImportForm from "./BulkImportForm";
 import TargetSchoolList from "./TargetSchoolList";
 
-function netOf(r: { correct: number; wrong: number }) {
-  return r.correct - r.wrong * 0.25;
-}
-
 export default async function HedeflerPage() {
   await requireSession();
 
-  const [schools, recentExams] = await Promise.all([
+  const [schools, latestExam] = await Promise.all([
     prisma.targetSchool.findMany({
-      orderBy: { targetNet: "desc" },
+      orderBy: { targetPercentile: "asc" },
     }),
-    prisma.mockExam.findMany({
+    prisma.mockExam.findFirst({
       orderBy: { date: "desc" },
-      take: 3,
-      include: { results: true },
+      where: { estimatedPercentile: { not: null } },
     }),
   ]);
 
-  const examNets = recentExams.map((exam) =>
-    exam.results.reduce((sum, r) => sum + netOf(r), 0)
-  );
-  const latestNet = examNets.length > 0 ? examNets[0] : null;
-  const avgNet =
-    examNets.length > 0 ? examNets.reduce((s, n) => s + n, 0) / examNets.length : null;
+  const studentPercentile = latestExam?.estimatedPercentile ?? null;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-gray-900">Hedef Okullar</h1>
         <p className="text-sm text-gray-500">
-          İlgilendiğiniz okulları hedef net değerleriyle ekleyin, deneme sonuçlarınızla
-          karşılaştırın.
+          İlgilendiğiniz okulları taban yüzdelik dilimleriyle ekleyin, deneme sonuçlarınızdaki
+          tahmini yüzdelik dilimle karşılaştırın.
         </p>
       </div>
 
       <div className="card bg-brand-50">
-        {latestNet !== null ? (
+        {studentPercentile !== null ? (
           <>
             <p className="text-sm text-gray-700">
-              Son deneme neti: <span className="font-semibold text-brand-700">{latestNet.toFixed(1)}</span>
-              {avgNet !== null && examNets.length > 1 && (
-                <>
-                  {" "}
-                  · Son {examNets.length} deneme ortalaması:{" "}
-                  <span className="font-semibold text-brand-700">{avgNet.toFixed(1)}</span>
-                </>
-              )}
+              Son deneme yüzdelik dilimi:{" "}
+              <span className="font-semibold text-brand-700">{studentPercentile}</span>
             </p>
             <p className="mt-1 text-xs text-gray-500">
-              Karşılaştırmalar son deneme netine göre yapılır.
+              Karşılaştırmalar bu değere göre yapılır (küçük değer = daha iyi sıralama).
             </p>
           </>
         ) : (
           <p className="text-sm text-gray-600">
-            Henüz deneme sonucu eklenmedi. Karşılaştırma görebilmek için önce{" "}
+            Henüz tahmini yüzdelik dilim içeren bir deneme sonucu yok. Karşılaştırma
+            görebilmek için{" "}
             <a href="/denemeler" className="font-medium text-brand-700 underline">
               Denemeler
             </a>{" "}
-            sayfasından bir sonuç girin.
+            sayfasından bir sonuç girerken "Tahmini yüzdelik dilim" alanını da doldurun.
           </p>
         )}
       </div>
 
       <p className="text-xs text-gray-400">
-        Not: Bu karşılaştırma yalnızca girdiğiniz hedef net değerine göre basit bir kıyaslamadır.
-        Gerçek LGS puanı ve okulların taban puanları/kontenjanları her yıl değişir; kesin bir
-        yerleşim garantisi vermez. Güncel taban puanlarını MEB/e-okul gibi resmi kaynaklardan
-        teyit etmenizi öneririz.
+        Not: Bu karşılaştırma, girdiğiniz hedef yüzdelik dilim ile deneme sonucunuzdaki tahmini
+        yüzdelik dilimin basit bir kıyaslamasıdır. Okulların taban puanları/yüzdelik dilimleri ve
+        kontenjanları her yıl değişir; kesin bir yerleşim garantisi vermez. Güncel verileri
+        MEB/e-okul gibi resmi kaynaklardan teyit etmenizi öneririz.
       </p>
 
       <TargetSchoolForm />
       <BulkImportForm />
 
-      <TargetSchoolList items={schools} currentNet={latestNet} />
+      <TargetSchoolList items={schools} studentPercentile={studentPercentile} />
     </div>
   );
 }

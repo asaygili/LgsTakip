@@ -115,14 +115,15 @@ model Mistake {
 }
 
 model MockExam {
-  id        String           @id @default(cuid())
-  name      String
-  date      DateTime
-  type      String           @default("GENEL")
-  userId    String
-  user      User             @relation(fields: [userId], references: [id])
-  results   MockExamResult[]
-  createdAt DateTime         @default(now())
+  id                  String           @id @default(cuid())
+  name                String
+  date                DateTime
+  type                String           @default("GENEL")
+  estimatedPercentile Float?
+  userId              String
+  user                User             @relation(fields: [userId], references: [id])
+  results             MockExamResult[]
+  createdAt           DateTime         @default(now())
 }
 
 model MockExamResult {
@@ -139,11 +140,15 @@ model MockExamResult {
 }
 
 model TargetSchool {
-  id         String   @id @default(cuid())
-  name       String
-  targetNet  Float
-  note       String?
-  userId     String
-  user       User     @relation(fields: [userId], references: [id])
-  createdAt  DateTime @default(now())
+  id               String   @id @default(cuid())
+  name             String
+  location         String?
+  quota            Int?
+  cutoffScore      Float?
+  targetPercentile Float?
+  targetNet        Float?
+  note             String?
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  createdAt        DateTime @default(now())
 }

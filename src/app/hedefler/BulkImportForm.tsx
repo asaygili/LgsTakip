@@ -30,20 +30,21 @@ export default function BulkImportForm() {
       {open && (
         <>
           <p className="text-xs text-gray-500">
-            Her satıra bir okul yazın: <strong>Okul Adı</strong> ardından TAB (veya çift boşluk)
-            ile ayrılmış <strong>Hedef Net</strong> (0-90 arası), isterseniz üçüncü sütun olarak
-            bir not. Örnek:
+            MEB/e-okul taban puan tablosunu (Sıra, İl/İlçe, Okul Adı, Kont., Taban Puanı, Yüzdelik
+            Dilim sütunlarıyla) kopyalayıp <strong>olduğu gibi</strong> aşağıya yapıştırabilirsiniz.
+            İsterseniz kendi kısa listenizi de <strong>Okul Adı [TAB] Yüzdelik Dilim</strong>{" "}
+            formatında yazabilirsiniz. Örnek:
           </p>
-          <pre className="rounded-lg bg-gray-50 p-2 text-xs text-gray-600">
-{`Ankara Fen Lisesi\t85\t2025 taban puanı
-Kadıköy Anadolu Lisesi\t78`}
+          <pre className="overflow-x-auto rounded-lg bg-gray-50 p-2 text-xs text-gray-600">
+{`1\tAnkara / Çankaya\tAnkara Fen Lisesi\t120\t494,4243\t0,09
+Kadıköy Anadolu Lisesi\t2,5\tKardeşimin okulu`}
           </pre>
           <form ref={formRef} action={formAction} className="space-y-3">
             <textarea
               name="bulkText"
               className="input font-mono text-xs"
-              rows={6}
-              placeholder="Okul Adı[TAB]Hedef Net[TAB]Not (opsiyonel)"
+              rows={8}
+              placeholder="Tabloyu buraya yapıştırın"
               required
             />
             {state.error && <p className="text-sm text-red-600">{state.error}</p>}

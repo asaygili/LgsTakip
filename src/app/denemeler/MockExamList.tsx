@@ -17,6 +17,7 @@ type ExamItem = {
   name: string;
   date: string;
   type: string;
+  estimatedPercentile: number | null;
   results: ResultItem[];
 };
 
@@ -48,6 +49,15 @@ export default function MockExamList({ items }: { items: ExamItem[] }) {
                 <p className="text-xs text-gray-500">
                   {new Date(exam.date).toLocaleDateString("tr-TR")} · Toplam Net:{" "}
                   <span className="font-semibold text-brand-700">{totalNet.toFixed(2)}</span>
+                  {exam.estimatedPercentile !== null && (
+                    <>
+                      {" "}
+                      · Yüzdelik dilim:{" "}
+                      <span className="font-semibold text-brand-700">
+                        {exam.estimatedPercentile}
+                      </span>
+                    </>
+                  )}
                 </p>
               </div>
               <button

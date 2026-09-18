@@ -22,16 +22,34 @@ export default function MockExamForm({ subjects }: { subjects: Subject[] }) {
           <input type="date" name="date" className="input" defaultValue={todayStr()} required />
         </div>
       </div>
-      <div>
-        <label className="label">Tür</label>
-        <select name="type" className="input" defaultValue="GENEL">
-          {Object.entries(EXAM_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Tür</label>
+          <select name="type" className="input" defaultValue="GENEL">
+            {Object.entries(EXAM_TYPE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="label">Tahmini yüzdelik dilim (opsiyonel)</label>
+          <input
+            type="number"
+            name="estimatedPercentile"
+            className="input"
+            min={0}
+            max={100}
+            step={0.01}
+            placeholder="Örn: 1.25"
+          />
+        </div>
       </div>
+      <p className="text-xs text-gray-400">
+        Yüzdelik dilim, kullandığınız deneme sonuç sisteminin verdiği tahmini sıralama yüzdesidir
+        (küçük değer = daha iyi sıralama). Hedef Okullar sayfasındaki karşılaştırma için kullanılır.
+      </p>
 
       <div className="space-y-2">
         <label className="label">Ders sonuçları</label>

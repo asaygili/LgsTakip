@@ -11,6 +11,9 @@ export async function createMockExam(formData: FormData) {
   const dateRaw = String(formData.get("date") || "");
   const type = String(formData.get("type") || "GENEL");
   const subjectIds = formData.getAll("subjectIds") as string[];
+  const percentileRaw = String(formData.get("estimatedPercentile") || "").replace(",", ".");
+  const estimatedPercentile =
+    percentileRaw && !Number.isNaN(Number(percentileRaw)) ? Number(percentileRaw) : null;
 
   if (!name || !dateRaw || subjectIds.length === 0) return;
 
@@ -30,6 +33,7 @@ export async function createMockExam(formData: FormData) {
       name,
       date: new Date(dateRaw),
       type: type as "GENEL" | "BRANS",
+      estimatedPercentile,
       userId: session.user.id,
       results: {
         create: results.map((r) => ({
