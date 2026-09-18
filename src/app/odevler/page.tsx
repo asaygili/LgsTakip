@@ -18,7 +18,11 @@ export default async function OdevlerPage() {
     }),
     prisma.homework.findMany({
       orderBy: [{ assignedDate: "desc" }, { createdAt: "desc" }],
-      include: { subject: true, topic: true, photos: true },
+      include: {
+        subject: true,
+        topic: true,
+        photos: { select: { id: true }, orderBy: { createdAt: "asc" } },
+      },
     }),
   ]);
 
@@ -26,7 +30,7 @@ export default async function OdevlerPage() {
     ...hw,
     assignedDate: hw.assignedDate.toISOString(),
     dueDate: hw.dueDate ? hw.dueDate.toISOString() : null,
-    photos: hw.photos.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })),
+    photos: hw.photos,
   }));
 
   return (

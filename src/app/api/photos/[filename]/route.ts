@@ -1,17 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "fs/promises";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { resolveUploadPath } from "@/lib/uploads";
-
-const CONTENT_TYPE_BY_EXT: Record<string, string> = {
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  webp: "image/webp",
-  gif: "image/gif",
-  heic: "image/heic",
-};
+import { prisma } from "@/lib/prisma";
 
 export async function GET(
   _req: NextRequest,
@@ -23,25 +13,15 @@ export async function GET(
   }
 
   const { filename } = await params;
-  if (!filename || filename.includes("/") || filename.includes("..")) {
+  const photo = await prisma.homeworkPhoto.findUnique({ where: { id: filename } });
+  if (!photo) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const ext = filename.split(".").pop()?.toLowerCase() ?? "";
-  const contentType = CONTENT_TYPE_BY_EXT[ext];
-  if (!contentType) {
-    return new NextResponse("Not found", { status: 404 });
-  }
-
-  try {
-    const buffer = await readFile(resolveUploadPath(filename));
-    return new NextResponse(buffer, {
-      headers: {
-        "Content-Type": contentType,
-        "Cache-Control": "private, max-age=31536000, immutable",
-      },
-    });
-  } catch {
-    return new NextResponse("Not found", { status: 404 });
-  }
+  return new NextResponse(new Uint8Array(photo.data), {
+    headers: {
+      "Content-Type": photo.mimeType,
+      "Cache-Control": "private, max-age=31536000, immutable",
+    },
+  });
 }

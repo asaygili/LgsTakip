@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// SQLite has no native enum support, so these fields are plain Strings.
-// Allowed values are enforced in the TypeScript layer (see src/lib/labels.ts):
+// Bu alanlar düz String tutulur; izin verilen değerler TypeScript
+// katmanında kontrol edilir (bkz. src/lib/labels.ts):
 // Role: PARENT | STUDENT
 // HomeworkStatus: BEKLIYOR | DEVAM_EDIYOR | TAMAMLANDI
 // TopicStatus: BASLANMADI | OGRENILIYOR | TEKRAR_GEREKLI | OGRENILDI
@@ -76,7 +76,8 @@ model HomeworkPhoto {
   id         String   @id @default(cuid())
   homeworkId String
   homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
-  filePath   String
+  mimeType   String
+  data       Bytes
   createdAt  DateTime @default(now())
 }
 

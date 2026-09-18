@@ -29,17 +29,20 @@ ve girebilir.
 
 ## Teknolojiler
 
-Next.js 14 (App Router, TypeScript) · Prisma + SQLite · NextAuth (Credentials)
+Next.js 15 (App Router, TypeScript) · Prisma + PostgreSQL · NextAuth (Credentials)
 · Tailwind CSS · Recharts
 
 ## Kurulum
 
 ```bash
 npm install
-cp .env.example .env   # gerekirse NEXTAUTH_SECRET değerini değiştirin
-npx prisma migrate dev --name init
+cp .env.example .env   # DATABASE_URL ve NEXTAUTH_SECRET değerlerini kendinize göre ayarlayın
+npx prisma migrate dev
 npm run dev
 ```
+
+Yerelde çalışan bir PostgreSQL sunucusuna ihtiyacınız var; `DATABASE_URL`
+bunu göstermelidir.
 
 Uygulama http://localhost:3000 adresinde açılır.
 
@@ -51,11 +54,8 @@ iki kullanıcı ile LGS müfredat konularını oluşturur:
 | `veli`        | `veli1234`   | Veli     |
 | `ogrenci`     | `ogrenci1234`| Öğrenci  |
 
-**Giriş yaptıktan sonra şifreleri değiştirmeniz önerilir.** Şu an için
-şifre değiştirme ekranı yoktur; gerekirse veritabanında `User.passwordHash`
-alanını `bcryptjs` ile hash'lenmiş yeni bir değerle güncelleyebilir ya da
-`prisma/seed.ts` dosyasındaki şifreleri değiştirip seed'i tekrar
-çalıştırabilirsiniz (`npm run prisma:seed`).
+**Giriş yaptıktan sonra şifreleri değiştirmeniz önerilir** — uygulama
+içindeki **Ayarlar** sayfasından yapabilirsiniz.
 
 ## Telefondan / Her Yerden Erişim (Railway ile Yayına Alma)
 
@@ -74,15 +74,13 @@ sonrasında otomatik olarak yeniden yayınlar.
    **Source → Branch** kısmından `claude/lgs-student-tracking-app-ci5l6u`
    branch'ini seçin (veya isterseniz önce bu branch'i `main`e birleştirip
    `main`i seçebilirsiniz).
-4. Aynı **Settings** sekmesinde **Volumes → New Volume** ile kalıcı bir disk
-   ekleyin, **Mount path** olarak `/data` yazın. (Bu adım çok önemli: volume
-   eklemezseniz her yeni yayında veriler ve fotoğraflar silinir.)
+4. Proje ekranında **"+ New" → "Database" → "PostgreSQL"** ile bir Postgres
+   veritabanı ekleyin. (Kalıcı disk/volume ayarına gerek yoktur; fotoğraflar
+   dahil tüm veriler bu veritabanında saklanır.)
 5. **Variables** sekmesinden şu ortam değişkenlerini ekleyin:
-   - `DATABASE_URL` → `file:/data/app.db`
-   - `UPLOADS_DIR` → `/data/uploads`
-   - `NEXTAUTH_SECRET` → rastgele, uzun bir metin (bana "bir NEXTAUTH_SECRET
-     üret" diyebilirsiniz, ya da telefonda rastgele 40 karakterlik bir metin
-     yazabilirsiniz)
+   - `DATABASE_URL` → `${{Postgres.DATABASE_URL}}` (Railway'in Postgres
+     servisine referans; servis adınız farklıysa ona göre yazın)
+   - `NEXTAUTH_SECRET` → rastgele, uzun bir metin
    - `NEXTAUTH_URL` → şimdilik boş bırakın, 6. adımda dolduracağız
 6. **Settings → Networking → Generate Domain** ile herkese açık bir adres
    oluşturun (`https://....up.railway.app` şeklinde). Bu adresi kopyalayıp
@@ -114,17 +112,12 @@ seed adımını otomatik çalıştırır.
 
 ## Veri modeli
 
-Veriler `prisma/dev.db` adlı yerel bir SQLite dosyasında tutulur (bu dosya
-git'e dahil edilmez). Aile içi kullanım için yeterlidir; ileride birden çok
-cihazdan/uzaktan erişim gerekirse `DATABASE_URL` değiştirilerek Postgres gibi
-gerçek bir sunucu veritabanına kolayca geçilebilir (Prisma şeması taşınabilir
-şekilde yazılmıştır).
+Tüm veriler PostgreSQL veritabanında tutulur. Ödev fotoğrafları da diskte
+değil, veritabanında (`HomeworkPhoto.data`) saklanır ve `/api/photos/<id>`
+adresi üzerinden yalnızca giriş yapmış kullanıcılara sunulur. Bu sayede
+uygulama kalıcı disk (volume) yapılandırması gerektirmez; yeniden
+başlatmalarda hiçbir veri kaybolmaz.
 
-Ödev fotoğrafları `UPLOADS_DIR` ortam değişkeninin gösterdiği klasöre
-(yerelde varsayılan olarak `data/uploads/`, Railway'de `/data/uploads`)
-kaydedilir ve `/api/photos/...` adresi üzerinden, yalnızca giriş yapmış
-kullanıcılara sunulur. Bu klasör de git'e dahil edilmez; kalıcı olması için
-mutlaka bir disk/volume üzerinde olmalıdır (bkz. yukarıdaki Railway adımı 4).
 Fotoğraf başına en fazla 8MB, tek istekte en fazla 20MB kabul edilir
 (`next.config.mjs` → `serverActions`).
 

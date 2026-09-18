@@ -6,7 +6,7 @@ import { updateHomeworkStatus, deleteHomework, deleteHomeworkPhoto } from "./act
 import AddPhotoButton from "./AddPhotoButton";
 import { HOMEWORK_STATUS_LABELS, HOMEWORK_STATUS_COLORS } from "@/lib/labels";
 
-type Photo = { id: string; filePath: string };
+type Photo = { id: string };
 
 type HomeworkItem = {
   id: string;
@@ -71,11 +71,11 @@ export default function HomeworkList({ items }: { items: HomeworkItem[] }) {
                 <div key={photo.id} className="group relative h-16 w-16 shrink-0">
                   <button
                     type="button"
-                    onClick={() => setLightbox(photo.filePath)}
+                    onClick={() => setLightbox(`/api/photos/${photo.id}`)}
                     className="block h-16 w-16 overflow-hidden rounded-lg ring-1 ring-black/10"
                   >
                     <Image
-                      src={photo.filePath}
+                      src={`/api/photos/${photo.id}`}
                       alt="Ödev fotoğrafı"
                       width={64}
                       height={64}

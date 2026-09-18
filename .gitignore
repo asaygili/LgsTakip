@@ -8,4 +8,4 @@ prisma/dev.db
 prisma/dev.db-journal
 .DS_Store
 npm-debug.log*
-/data
+# (kalıcı disk gerekmez; veriler Postgres'te tutulur)
