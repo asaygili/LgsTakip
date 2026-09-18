@@ -13,7 +13,13 @@ const LINKS = [
   { href: "/denemeler", label: "Denemeler" },
 ];
 
-export default function NavBar({ userName }: { userName: string }) {
+export default function NavBar({
+  userName,
+  buildSha,
+}: {
+  userName: string;
+  buildSha?: string;
+}) {
   const pathname = usePathname();
 
   return (
@@ -42,6 +48,11 @@ export default function NavBar({ userName }: { userName: string }) {
             })}
           </div>
           <div className="flex items-center gap-3">
+            {buildSha && (
+              <span className="text-[10px] text-gray-300" title="Yayındaki sürüm">
+                #{buildSha}
+              </span>
+            )}
             <span className="hidden text-sm text-gray-500 sm:inline">{userName}</span>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
