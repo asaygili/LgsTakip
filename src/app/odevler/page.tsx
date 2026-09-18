@@ -68,7 +68,6 @@ export default async function OdevlerPage() {
             type="file"
             name="photos"
             accept="image/*"
-            capture="environment"
             multiple
             className="input file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-brand-700"
           />

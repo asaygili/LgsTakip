@@ -26,7 +26,6 @@ export default function AddPhotoButton({ homeworkId }: { homeworkId: string }) {
         ref={inputRef}
         type="file"
         accept="image/*"
-        capture="environment"
         multiple
         className="hidden"
         disabled={isPending}
