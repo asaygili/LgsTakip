@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { deleteDailyLog } from "./actions";
+import { netOf } from "@/lib/lgs";
 
 type LogItem = {
   id: string;
@@ -26,7 +27,7 @@ export default function DailyLogList({ items }: { items: LogItem[] }) {
     <ul className="space-y-2">
       {items.map((log) => {
         const total = log.questionsCorrect + log.questionsWrong + log.questionsBlank;
-        const net = log.questionsCorrect - log.questionsWrong * 0.25;
+        const net = netOf({ correct: log.questionsCorrect, wrong: log.questionsWrong });
         return (
           <li key={log.id} className="card flex items-start justify-between gap-3">
             <div className="min-w-0">

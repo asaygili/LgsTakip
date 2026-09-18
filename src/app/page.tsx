@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import WeeklyTrendChart from "@/components/WeeklyTrendChart";
 import { HOMEWORK_STATUS_COLORS, HOMEWORK_STATUS_LABELS } from "@/lib/labels";
+import { netOf, calculateLgsPuan } from "@/lib/lgs";
 
 function startOfDay(d: Date) {
   const copy = new Date(d);
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
       prisma.topic.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.mockExam.findFirst({
         orderBy: { date: "desc" },
-        include: { results: true },
+        include: { results: { include: { subject: true } } },
       }),
     ]);
 
@@ -96,7 +97,16 @@ export default async function DashboardPage() {
   const totalTopics = topicCounts.reduce((s, t) => s + t._count._all, 0);
 
   const lastExamNet = lastExam
-    ? lastExam.results.reduce((s, r) => s + r.correct - r.wrong * 0.25, 0)
+    ? lastExam.results.reduce((s, r) => s + netOf(r), 0)
+    : null;
+  const lastExamPuan = lastExam
+    ? calculateLgsPuan(
+        lastExam.results.map((r) => ({
+          subjectName: r.subject.name,
+          correct: r.correct,
+          wrong: r.wrong,
+        }))
+      )
     : null;
 
   return (
@@ -177,6 +187,13 @@ export default async function DashboardPage() {
           <p className="text-sm text-gray-600">
             {lastExam.name} · {new Date(lastExam.date).toLocaleDateString("tr-TR")} · Net:{" "}
             <span className="font-semibold text-brand-700">{lastExamNet?.toFixed(2)}</span>
+            {lastExamPuan !== null && (
+              <>
+                {" "}
+                · Tahmini Puan:{" "}
+                <span className="font-semibold text-brand-700">{lastExamPuan.toFixed(2)}</span>
+              </>
+            )}
           </p>
         </div>
       )}

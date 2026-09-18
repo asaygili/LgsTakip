@@ -13,31 +13,54 @@ type TargetSchoolItem = {
   note: string | null;
 };
 
-// Yüzdelik dilimde küçük değer daha iyi sıralama demektir.
-function statusFor(studentPercentile: number | null, targetPercentile: number | null) {
-  if (targetPercentile === null) {
-    return { label: "Hedef yüzdelik dilim yok", color: "bg-gray-100 text-gray-500" };
-  }
-  if (studentPercentile === null) {
-    return { label: "Yüzdelik dilim girilmedi", color: "bg-gray-100 text-gray-500" };
-  }
-  const diff = targetPercentile - studentPercentile;
-  const margin = Math.max(targetPercentile * 0.2, 0.5);
+const PUAN_MARGIN = 10;
 
-  if (diff >= 0) {
-    return { label: `Sıralama yeterli (+${diff.toFixed(2)})`, color: "bg-emerald-100 text-emerald-700" };
+function statusFor(
+  studentPuan: number | null,
+  studentPercentile: number | null,
+  school: TargetSchoolItem
+) {
+  // Puan mevcutsa onu kullan (otomatik hesaplanır, daha güvenilir): büyük değer daha iyi.
+  if (studentPuan !== null && school.cutoffScore !== null) {
+    const diff = studentPuan - school.cutoffScore;
+    if (diff >= 0) {
+      return {
+        label: `Puan yeterli (+${diff.toFixed(1)})`,
+        color: "bg-emerald-100 text-emerald-700",
+      };
+    }
+    if (diff >= -PUAN_MARGIN) {
+      return { label: `Yakın (${diff.toFixed(1)} puan)`, color: "bg-amber-100 text-amber-700" };
+    }
+    return { label: `Puan yetersiz (${diff.toFixed(1)})`, color: "bg-red-100 text-red-700" };
   }
-  if (diff >= -margin) {
-    return { label: `Yakın (${diff.toFixed(2)})`, color: "bg-amber-100 text-amber-700" };
+
+  // Yoksa yüzdelik dilime düş: küçük değer daha iyi.
+  if (studentPercentile !== null && school.targetPercentile !== null) {
+    const diff = school.targetPercentile - studentPercentile;
+    const margin = Math.max(school.targetPercentile * 0.2, 0.5);
+    if (diff >= 0) {
+      return {
+        label: `Sıralama yeterli (+${diff.toFixed(2)})`,
+        color: "bg-emerald-100 text-emerald-700",
+      };
+    }
+    if (diff >= -margin) {
+      return { label: `Yakın (${diff.toFixed(2)})`, color: "bg-amber-100 text-amber-700" };
+    }
+    return { label: `Sıralama yetersiz (${diff.toFixed(2)})`, color: "bg-red-100 text-red-700" };
   }
-  return { label: `Sıralama yetersiz (${diff.toFixed(2)})`, color: "bg-red-100 text-red-700" };
+
+  return { label: "Karşılaştırma için veri eksik", color: "bg-gray-100 text-gray-500" };
 }
 
 export default function TargetSchoolList({
   items,
+  studentPuan,
   studentPercentile,
 }: {
   items: TargetSchoolItem[];
+  studentPuan: number | null;
   studentPercentile: number | null;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -49,16 +72,16 @@ export default function TargetSchoolList({
   return (
     <ul className="space-y-2">
       {items.map((school) => {
-        const status = statusFor(studentPercentile, school.targetPercentile);
+        const status = statusFor(studentPuan, studentPercentile, school);
         return (
           <li key={school.id} className="card flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="font-medium text-gray-900">{school.name}</h3>
               <p className="text-xs text-gray-500">
-                {school.location ? `${school.location} · ` : ""}
-                Yüzdelik dilim: {school.targetPercentile ?? "-"}
-                {school.cutoffScore ? ` · Puan: ${school.cutoffScore}` : ""}
-                {school.quota ? ` · Kontenjan: ${school.quota}` : ""}
+                {school.location ? `${school.location} \u00b7 ` : ""}
+                {school.targetPercentile !== null && `Yüzdelik dilim: ${school.targetPercentile}`}
+                {school.cutoffScore ? ` \u00b7 Puan: ${school.cutoffScore}` : ""}
+                {school.quota ? ` \u00b7 Kontenjan: ${school.quota}` : ""}
               </p>
               {school.note && <p className="text-xs text-gray-400">{school.note}</p>}
               <span className={`badge mt-1.5 ${status.color}`}>{status.label}</span>

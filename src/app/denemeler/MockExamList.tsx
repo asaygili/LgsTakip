@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { deleteMockExam } from "./actions";
 import { EXAM_TYPE_LABELS } from "@/lib/labels";
+import { netOf, calculateLgsPuan } from "@/lib/lgs";
 
 type ResultItem = {
   id: string;
@@ -21,10 +22,6 @@ type ExamItem = {
   results: ResultItem[];
 };
 
-function netOf(r: { correct: number; wrong: number }) {
-  return r.correct - r.wrong * 0.25;
-}
-
 export default function MockExamList({ items }: { items: ExamItem[] }) {
   const [isPending, startTransition] = useTransition();
 
@@ -36,6 +33,13 @@ export default function MockExamList({ items }: { items: ExamItem[] }) {
     <ul className="space-y-3">
       {items.map((exam) => {
         const totalNet = exam.results.reduce((sum, r) => sum + netOf(r), 0);
+        const puan = calculateLgsPuan(
+          exam.results.map((r) => ({
+            subjectName: r.subject.name,
+            correct: r.correct,
+            wrong: r.wrong,
+          }))
+        );
         return (
           <li key={exam.id} className="card">
             <div className="flex items-start justify-between gap-3">
@@ -49,6 +53,13 @@ export default function MockExamList({ items }: { items: ExamItem[] }) {
                 <p className="text-xs text-gray-500">
                   {new Date(exam.date).toLocaleDateString("tr-TR")} · Toplam Net:{" "}
                   <span className="font-semibold text-brand-700">{totalNet.toFixed(2)}</span>
+                  {puan !== null && (
+                    <>
+                      {" "}
+                      · Tahmini Puan:{" "}
+                      <span className="font-semibold text-brand-700">{puan.toFixed(2)}</span>
+                    </>
+                  )}
                   {exam.estimatedPercentile !== null && (
                     <>
                       {" "}
