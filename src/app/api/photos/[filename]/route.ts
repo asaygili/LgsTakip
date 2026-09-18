@@ -15,14 +15,14 @@ const CONTENT_TYPE_BY_EXT: Record<string, string> = {
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return new NextResponse("Unauthorized", { status: 401 });
   }
 
-  const filename = params.filename;
+  const { filename } = await params;
   if (!filename || filename.includes("/") || filename.includes("..")) {
     return new NextResponse("Not found", { status: 404 });
   }
