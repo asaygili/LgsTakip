@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/hatalar", label: "Hatalar" },
   { href: "/konular", label: "Konular" },
   { href: "/denemeler", label: "Denemeler" },
+  { href: "/hedefler", label: "Hedefler" },
 ];
 
 export default function NavBar({
