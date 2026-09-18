@@ -2,8 +2,12 @@ import { mkdir, unlink, writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "homework");
-const PUBLIC_PREFIX = "/uploads/homework";
+// UPLOADS_DIR ortam değişkeni Railway gibi platformlarda kalıcı bir disk
+// (volume) yoluna işaret etmelidir (ör. /data/uploads). Yerelde ise proje
+// klasörü altındaki data/uploads kullanılır.
+const BASE_DIR = process.env.UPLOADS_DIR || path.join(process.cwd(), "data", "uploads");
+const UPLOAD_DIR = path.join(BASE_DIR, "homework");
+export const PUBLIC_PREFIX = "/api/photos";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/heic"]);
 const EXT_BY_TYPE: Record<string, string> = {
@@ -35,12 +39,22 @@ export async function savePhotoFiles(files: File[]): Promise<string[]> {
 }
 
 export async function deletePhotoFile(publicPath: string) {
-  if (!publicPath.startsWith(PUBLIC_PREFIX + "/")) return;
-  const filename = publicPath.slice(PUBLIC_PREFIX.length + 1);
-  if (!filename || filename.includes("/") || filename.includes("..")) return;
+  const filename = filenameFromPublicPath(publicPath);
+  if (!filename) return;
   try {
     await unlink(path.join(UPLOAD_DIR, filename));
   } catch {
     // dosya zaten yoksa yoksay
   }
+}
+
+export function filenameFromPublicPath(publicPath: string): string | null {
+  if (!publicPath.startsWith(PUBLIC_PREFIX + "/")) return null;
+  const filename = publicPath.slice(PUBLIC_PREFIX.length + 1);
+  if (!filename || filename.includes("/") || filename.includes("..")) return null;
+  return filename;
+}
+
+export function resolveUploadPath(filename: string) {
+  return path.join(UPLOAD_DIR, filename);
 }

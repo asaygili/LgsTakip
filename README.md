@@ -57,12 +57,60 @@ alanını `bcryptjs` ile hash'lenmiş yeni bir değerle güncelleyebilir ya da
 `prisma/seed.ts` dosyasındaki şifreleri değiştirip seed'i tekrar
 çalıştırabilirsiniz (`npm run prisma:seed`).
 
-## Üretim (production) build
+## Telefondan / Her Yerden Erişim (Railway ile Yayına Alma)
+
+Bilgisayara ihtiyaç duymadan, tamamen telefon tarayıcısından, uygulamayı
+internete açık bir adrese (ör. `lgs-takip-production.up.railway.app`)
+yayınlayabilirsiniz. [Railway](https://railway.app) aylık ~$5 civarı bir
+ücretle çalışır, GitHub'daki bu depoyu doğrudan bağlar ve her `git push`
+sonrasında otomatik olarak yeniden yayınlar.
+
+1. Telefonda [railway.app](https://railway.app) adresine gidin, **"Login with
+   GitHub"** ile giriş yapın ve GitHub hesabınızı (bu depoyu içeren hesap)
+   yetkilendirin.
+2. **New Project → Deploy from GitHub repo** seçin, `asaygili/LgsTakip`
+   deposunu seçin. İzin isterse Railway'e bu depoya erişim izni verin.
+3. Servis oluşturulduktan sonra servisin **Settings** sekmesinde
+   **Source → Branch** kısmından `claude/lgs-student-tracking-app-ci5l6u`
+   branch'ini seçin (veya isterseniz önce bu branch'i `main`e birleştirip
+   `main`i seçebilirsiniz).
+4. Aynı **Settings** sekmesinde **Volumes → New Volume** ile kalıcı bir disk
+   ekleyin, **Mount path** olarak `/data` yazın. (Bu adım çok önemli: volume
+   eklemezseniz her yeni yayında veriler ve fotoğraflar silinir.)
+5. **Variables** sekmesinden şu ortam değişkenlerini ekleyin:
+   - `DATABASE_URL` → `file:/data/app.db`
+   - `UPLOADS_DIR` → `/data/uploads`
+   - `NEXTAUTH_SECRET` → rastgele, uzun bir metin (bana "bir NEXTAUTH_SECRET
+     üret" diyebilirsiniz, ya da telefonda rastgele 40 karakterlik bir metin
+     yazabilirsiniz)
+   - `NEXTAUTH_URL` → şimdilik boş bırakın, 6. adımda dolduracağız
+6. **Settings → Networking → Generate Domain** ile herkese açık bir adres
+   oluşturun (`https://....up.railway.app` şeklinde). Bu adresi kopyalayıp
+   5. adımdaki `NEXTAUTH_URL` değişkenine `https://` ile birlikte yapıştırın
+   ve kaydedin.
+7. Railway otomatik olarak `npm install`, `npm run build` ve
+   `npm run start` komutlarını çalıştırıp uygulamayı ayağa kaldırır (build
+   birkaç dakika sürebilir). `npm run start` içine gömülü olan
+   `prisma migrate deploy` ve seed adımı sayesinde veritabanı tabloları ve
+   `veli`/`ogrenci` kullanıcıları otomatik oluşur — elle bir komut
+   çalıştırmanıza gerek yoktur.
+8. Deploy tamamlanınca 6. adımdaki adresi telefonda açın, `veli` /
+   `veli1234` ile giriş yapın. Ana ekrana kısayol eklemek için tarayıcı
+   menüsünden "Ana ekrana ekle" seçeneğini kullanabilirsiniz.
+
+Bundan sonra branch'e her yeni push yapıldığında (ben değişiklik ekleyip
+push ettiğimde) Railway uygulamayı otomatik olarak yeniden yayınlar; siz
+bir şey yapmanıza gerek kalmaz.
+
+## Üretim (production) build — kendi sunucunuzda çalıştırmak isterseniz
 
 ```bash
 npm run build
 npm run start
 ```
+
+`npm run start`, sunucuyu başlatmadan önce `prisma migrate deploy` ve
+seed adımını otomatik çalıştırır.
 
 ## Veri modeli
 
@@ -72,10 +120,13 @@ cihazdan/uzaktan erişim gerekirse `DATABASE_URL` değiştirilerek Postgres gibi
 gerçek bir sunucu veritabanına kolayca geçilebilir (Prisma şeması taşınabilir
 şekilde yazılmıştır).
 
-Ödev fotoğrafları `public/uploads/homework/` klasörüne kaydedilir (bu klasör
-de git'e dahil edilmez). Uygulamayı başka bir sunucuya taşırken bu klasörü de
-birlikte taşımayı/yedeklemeyi unutmayın. Fotoğraf başına en fazla 8MB, tek
-istekte en fazla 20MB kabul edilir (`next.config.mjs` → `serverActions`).
+Ödev fotoğrafları `UPLOADS_DIR` ortam değişkeninin gösterdiği klasöre
+(yerelde varsayılan olarak `data/uploads/`, Railway'de `/data/uploads`)
+kaydedilir ve `/api/photos/...` adresi üzerinden, yalnızca giriş yapmış
+kullanıcılara sunulur. Bu klasör de git'e dahil edilmez; kalıcı olması için
+mutlaka bir disk/volume üzerinde olmalıdır (bkz. yukarıdaki Railway adımı 4).
+Fotoğraf başına en fazla 8MB, tek istekte en fazla 20MB kabul edilir
+(`next.config.mjs` → `serverActions`).
 
 ## Sonraki adımlar için öneriler
 
