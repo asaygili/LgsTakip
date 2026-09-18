@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// SQLite has no native enum support, so these fields are plain Strings.
+// Allowed values are enforced in the TypeScript layer (see src/lib/labels.ts):
+// Role: PARENT | STUDENT
+// HomeworkStatus: BEKLIYOR | DEVAM_EDIYOR | TAMAMLANDI
+// TopicStatus: BASLANMADI | OGRENILIYOR | TEKRAR_GEREKLI | OGRENILDI
+// MistakeReason: BILGI_EKSIGI | DIKKATSIZLIK | ZAMAN_YETERSIZLIGI | SORUYU_YANLIS_ANLAMA | ISLEM_HATASI | DIGER
+// ExamType: GENEL | BRANS
+
+model User {
+  id           String     @id @default(cuid())
+  username     String     @unique
+  name         String
+  passwordHash String
+  role         String
+  createdAt    DateTime   @default(now())
+  homeworks    Homework[]
+  dailyLogs    DailyLog[]
+  mistakes     Mistake[]
+  mockExams    MockExam[]
+}
+
+model Subject {
+  id         String       @id @default(cuid())
+  name       String       @unique
+  order      Int          @default(0)
+  topics     Topic[]
+  homeworks  Homework[]
+  dailyLogs  DailyLog[]
+  mistakes   Mistake[]
+  examResults MockExamResult[]
+}
+
+model Topic {
+  id        String      @id @default(cuid())
+  name      String
+  order     Int         @default(0)
+  status    String      @default("BASLANMADI")
+  subjectId String
+  subject   Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  homeworks Homework[]
+  dailyLogs DailyLog[]
+  mistakes  Mistake[]
+
+  @@unique([subjectId, name])
+}
+
+model Homework {
+  id           String         @id @default(cuid())
+  title        String
+  description  String?
+  assignedDate DateTime       @default(now())
+  dueDate      DateTime?
+  status       String         @default("BEKLIYOR")
+  subjectId    String
+  subject      Subject        @relation(fields: [subjectId], references: [id])
+  topicId      String?
+  topic        Topic?         @relation(fields: [topicId], references: [id])
+  createdById  String
+  createdBy    User           @relation(fields: [createdById], references: [id])
+  createdAt    DateTime       @default(now())
+}
+
+model DailyLog {
+  id               String    @id @default(cuid())
+  date             DateTime
+  questionsCorrect Int       @default(0)
+  questionsWrong   Int       @default(0)
+  questionsBlank   Int       @default(0)
+  durationMinutes  Int?
+  notes            String?
+  subjectId        String
+  subject          Subject   @relation(fields: [subjectId], references: [id])
+  topicId          String?
+  topic            Topic?    @relation(fields: [topicId], references: [id])
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  mistakes         Mistake[]
+  createdAt        DateTime  @default(now())
+}
+
+model Mistake {
+  id          String        @id @default(cuid())
+  description String?
+  reason      String
+  resolved    Boolean       @default(false)
+  subjectId   String
+  subject     Subject       @relation(fields: [subjectId], references: [id])
+  topicId     String?
+  topic       Topic?        @relation(fields: [topicId], references: [id])
+  dailyLogId  String?
+  dailyLog    DailyLog?     @relation(fields: [dailyLogId], references: [id], onDelete: SetNull)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  createdAt   DateTime      @default(now())
+}
+
+model MockExam {
+  id        String           @id @default(cuid())
+  name      String
+  date      DateTime
+  type      String           @default("GENEL")
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  results   MockExamResult[]
+  createdAt DateTime         @default(now())
+}
+
+model MockExamResult {
+  id         String   @id @default(cuid())
+  mockExamId String
+  mockExam   MockExam @relation(fields: [mockExamId], references: [id], onDelete: Cascade)
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  correct    Int      @default(0)
+  wrong      Int      @default(0)
+  blank      Int      @default(0)
+
+  @@unique([mockExamId, subjectId])
+}
