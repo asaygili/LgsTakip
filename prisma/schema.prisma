@@ -57,6 +57,7 @@ model Homework {
   id           String         @id @default(cuid())
   title        String
   description  String?
+  pages        String?
   assignedDate DateTime       @default(now())
   dueDate      DateTime?
   status       String         @default("BEKLIYOR")
@@ -66,7 +67,16 @@ model Homework {
   topic        Topic?         @relation(fields: [topicId], references: [id])
   createdById  String
   createdBy    User           @relation(fields: [createdById], references: [id])
+  photos       HomeworkPhoto[]
   createdAt    DateTime       @default(now())
+}
+
+model HomeworkPhoto {
+  id         String   @id @default(cuid())
+  homeworkId String
+  homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  filePath   String
+  createdAt  DateTime @default(now())
 }
 
 model DailyLog {

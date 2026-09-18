@@ -9,8 +9,10 @@ birlikte takip edebildiği basit bir web uygulaması.
 - **Panel**: Bugün/bu hafta çözülen soru sayısı, bekleyen ödev sayısı,
   öğrenilen konu oranı, son 7 günün soru trendi grafiği, en çok hata yapılan
   konular ve yaklaşan ödevler.
-- **Ödevler**: Ders/konu bazında ödev ekleme, durumu güncelleme (bekliyor /
-  devam ediyor / tamamlandı), son tarih takibi.
+- **Ödevler**: Ders/konu bazında, gün gün ödev ekleme (verildiği tarih, sayfa
+  aralığı, son tarih), durumu güncelleme (bekliyor / devam ediyor /
+  tamamlandı), öğretmenin tahtaya/kitaba yazdığı ödevin fotoğrafını yükleme
+  (telefonda doğrudan kamerayı açar).
 - **Sorular**: Günlük çözülen soruları ders/konu bazında doğru/yanlış/boş
   olarak kaydetme, net hesaplama, süre ve not ekleme.
 - **Hatalar**: Yanlış yapılan soruları nedeniyle (bilgi eksiği, dikkatsizlik,
@@ -69,6 +71,11 @@ git'e dahil edilmez). Aile içi kullanım için yeterlidir; ileride birden çok
 cihazdan/uzaktan erişim gerekirse `DATABASE_URL` değiştirilerek Postgres gibi
 gerçek bir sunucu veritabanına kolayca geçilebilir (Prisma şeması taşınabilir
 şekilde yazılmıştır).
+
+Ödev fotoğrafları `public/uploads/homework/` klasörüne kaydedilir (bu klasör
+de git'e dahil edilmez). Uygulamayı başka bir sunucuya taşırken bu klasörü de
+birlikte taşımayı/yedeklemeyi unutmayın. Fotoğraf başına en fazla 8MB, tek
+istekte en fazla 20MB kabul edilir (`next.config.mjs` → `serverActions`).
 
 ## Sonraki adımlar için öneriler
 
