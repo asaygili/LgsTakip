@@ -54,6 +54,14 @@ export default function NavBar({
               </span>
             )}
             <span className="hidden text-sm text-gray-500 sm:inline">{userName}</span>
+            <Link
+              href="/ayarlar"
+              className={`text-xs font-medium ${
+                pathname === "/ayarlar" ? "text-brand-700" : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Ayarlar
+            </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
               className="btn-secondary !px-3 !py-1.5 text-xs"
