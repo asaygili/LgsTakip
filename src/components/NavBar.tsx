@@ -29,9 +29,13 @@ export default function NavBar({
     <>
       <header className="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-brand-700">LGS Takip</span>
-          </div>
+          <Link
+            href="/"
+            aria-label="Panel'e dön"
+            className="flex items-center gap-2 rounded-lg text-lg font-bold text-brand-700 transition hover:text-brand-800"
+          >
+            LGS Takip
+          </Link>
           <div className="hidden items-center gap-1 md:flex">
             {LINKS.map((link) => {
               const active = pathname === link.href;
