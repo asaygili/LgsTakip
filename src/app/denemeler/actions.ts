@@ -57,6 +57,7 @@ export async function createMockExam(formData: FormData) {
   revalidatePath("/denemeler");
   revalidatePath("/hedefler");
   revalidatePath("/");
+  revalidatePath("/analiz");
 }
 
 export async function deleteMockExam(id: string) {
@@ -65,4 +66,5 @@ export async function deleteMockExam(id: string) {
   revalidatePath("/denemeler");
   revalidatePath("/hedefler");
   revalidatePath("/");
+  revalidatePath("/analiz");
 }

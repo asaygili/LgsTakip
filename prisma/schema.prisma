@@ -153,3 +153,12 @@ model TargetSchool {
   user             User     @relation(fields: [userId], references: [id])
   createdAt        DateTime @default(now())
 }
+
+// Haftalık çalışma hedefi. Aile içi tek öğrenci senaryosu olduğu için tek
+// satırlık (singleton) bir kayıt olarak tutulur.
+model Goal {
+  id              String   @id @default("default")
+  weeklyQuestions Int?
+  weeklyMinutes   Int?
+  updatedAt       DateTime @updatedAt
+}

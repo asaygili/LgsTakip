@@ -11,6 +11,13 @@ function startOfDay(d: Date) {
   return copy;
 }
 
+function startOfWeek(d: Date) {
+  const copy = startOfDay(d);
+  const day = (copy.getDay() + 6) % 7; // pazartesi = 0
+  copy.setDate(copy.getDate() - day);
+  return copy;
+}
+
 function dayLabel(d: Date) {
   return d.toLocaleDateString("tr-TR", { weekday: "short", day: "numeric", month: "numeric" });
 }
@@ -21,9 +28,19 @@ export default async function DashboardPage() {
   const today = startOfDay(new Date());
   const weekStart = new Date(today);
   weekStart.setDate(weekStart.getDate() - 6);
+  const goalWeekStart = startOfWeek(new Date());
 
-  const [weekLogs, todayLogs, pendingHomeworks, mistakes, topicCounts, lastExam] =
-    await Promise.all([
+  const [
+    weekLogs,
+    todayLogs,
+    pendingHomeworks,
+    mistakes,
+    topicCounts,
+    lastExam,
+    goal,
+    goalWeekLogs,
+    lastLog,
+  ] = await Promise.all([
       prisma.dailyLog.findMany({
         where: { date: { gte: weekStart } },
       }),
@@ -45,7 +62,22 @@ export default async function DashboardPage() {
         orderBy: [{ date: "desc" }, { createdAt: "desc" }],
         include: { results: { include: { subject: true } } },
       }),
+      prisma.goal.findUnique({ where: { id: "default" } }),
+      prisma.dailyLog.findMany({ where: { date: { gte: goalWeekStart } } }),
+      prisma.dailyLog.findFirst({ orderBy: { date: "desc" } }),
     ]);
+
+  // Haftalık hedef ilerlemesi (pazartesi başlangıçlı hafta)
+  const goalQuestionsDone = goalWeekLogs.reduce(
+    (s, l) => s + l.questionsCorrect + l.questionsWrong + l.questionsBlank,
+    0
+  );
+  const goalMinutesDone = goalWeekLogs.reduce((s, l) => s + (l.durationMinutes ?? 0), 0);
+
+  // Kaç gündür kayıt girilmemiş
+  const daysSinceLastLog = lastLog
+    ? Math.floor((today.getTime() - startOfDay(lastLog.date).getTime()) / 86400000)
+    : null;
 
   const days: { label: string; Doğru: number; Yanlış: number; Boş: number }[] = [];
   for (let i = 0; i < 7; i++) {
@@ -115,6 +147,45 @@ export default async function DashboardPage() {
         <h1 className="text-xl font-bold text-gray-900">Panel</h1>
         <p className="text-sm text-gray-500">Genel durum özeti</p>
       </div>
+
+      {daysSinceLastLog !== null && daysSinceLastLog >= 2 && (
+        <div className="card border border-amber-200 bg-amber-50">
+          <p className="text-sm text-amber-800">
+            {daysSinceLastLog} gündür soru kaydı girilmemiş.{" "}
+            <Link href="/sorular" className="font-medium underline">
+              Bugünün çalışmasını ekleyin
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+
+      {(goal?.weeklyQuestions || goal?.weeklyMinutes) && (
+        <div className="card space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-gray-900">Bu Haftaki Hedef</h2>
+            <Link href="/ayarlar" className="text-xs font-medium text-brand-700">
+              Değiştir
+            </Link>
+          </div>
+          {goal.weeklyQuestions ? (
+            <GoalBar
+              label="Soru"
+              done={goalQuestionsDone}
+              target={goal.weeklyQuestions}
+              unit="soru"
+            />
+          ) : null}
+          {goal.weeklyMinutes ? (
+            <GoalBar
+              label="Çalışma süresi"
+              done={goalMinutesDone}
+              target={goal.weeklyMinutes}
+              unit="dk"
+            />
+          ) : null}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Bugün Çözülen" value={todayTotal} />
@@ -197,6 +268,38 @@ export default async function DashboardPage() {
           </p>
         </div>
       )}
+    </div>
+  );
+}
+
+function GoalBar({
+  label,
+  done,
+  target,
+  unit,
+}: {
+  label: string;
+  done: number;
+  target: number;
+  unit: string;
+}) {
+  const pct = Math.min(100, Math.round((done / target) * 100));
+  const reached = done >= target;
+
+  return (
+    <div>
+      <div className="mb-1 flex items-baseline justify-between text-xs">
+        <span className="text-gray-600">{label}</span>
+        <span className={reached ? "font-medium text-emerald-700" : "text-gray-500"}>
+          {done} / {target} {unit} (%{pct})
+        </span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+        <div
+          className={`h-full rounded-full ${reached ? "bg-emerald-500" : "bg-brand-600"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
     </div>
   );
 }

@@ -12,7 +12,8 @@ birlikte takip edebildiği basit bir web uygulaması.
 - **Ödevler**: Ders/konu bazında, gün gün ödev ekleme (verildiği tarih, sayfa
   aralığı, son tarih), durumu güncelleme (bekliyor / devam ediyor /
   tamamlandı), öğretmenin tahtaya/kitaba yazdığı ödevin fotoğrafını yükleme
-  (telefonda doğrudan kamerayı açar).
+  (telefondan yeni fotoğraf çekebilir veya galerideki bir fotoğrafı
+  seçebilirsiniz).
 - **Sorular**: Günlük çözülen soruları ders/konu bazında doğru/yanlış/boş
   olarak kaydetme, net hesaplama, süre ve not ekleme.
 - **Hatalar**: Yanlış yapılan soruları nedeniyle (bilgi eksiği, dikkatsizlik,
@@ -22,7 +23,17 @@ birlikte takip edebildiği basit bir web uygulaması.
   İnkılap Tarihi, Din Kültürü, İngilizce) konu listesi ve her konunun
   öğrenilme durumu (başlanmadı / öğreniliyor / tekrar gerekli / öğrenildi).
 - **Denemeler**: Deneme sınavı sonuçlarını ders bazında kaydetme, net
-  hesaplama ve geçmiş sonuçları listeleme.
+  hesaplama, MEB katsayılarıyla tahmini LGS puanı ve geçmiş sonuçları
+  listeleme.
+- **Hedefler**: Hedef liseleri taban puanıyla birlikte kaydetme ve en son
+  denemenin tahmini puanıyla karşılaştırma.
+- **Analiz**: Tahmini puan gelişimi, ders bazında net gelişimi, son denemede
+  ders bazlı net, haftalık doğruluk oranı, hata nedeni dağılımı, konu bazlı
+  hata sayısı ve **zayıf konu radarı**. Her grafiğin sağ üstündeki *Tablo*
+  düğmesiyle aynı veri sayı sayı da okunabilir.
+- **Ayarlar**: Şifre değiştirme ve haftalık hedef (soru sayısı / çalışma
+  süresi) belirleme. Hedef girildiğinde panelde ilerleme çubuğu çıkar; iki
+  gündür kayıt girilmemişse panel uyarı gösterir.
 
 İki kullanıcı rolü vardır (veli ve öğrenci); ikisi de aynı verileri görebilir
 ve girebilir.
@@ -123,11 +134,11 @@ Fotoğraf başına en fazla 8MB, tek istekte en fazla 20MB kabul edilir
 
 ## Sonraki adımlar için öneriler
 
-- Haftalık/aylık **hedef belirleme** (ör. haftada 500 soru, deneme netinde X
-  hedefi) ve panelde hedefe göre ilerleme çubuğu
-- **Bildirim/hatırlatma**: tamamlanmamış ödevler veya birkaç gündür kayıt
-  girilmemiş dersler için uyarı
-- Konu bazlı **net/doğruluk trend grafiği** (bir konuda zaman içinde gelişim)
+- **Bildirim/hatırlatma**: tamamlanmamış ödevler için e-posta veya push
+  bildirimi (panel içi uyarı hâlihazırda var)
+- Konu bazlı **net/doğruluk trend grafiği** (tek bir konuda zaman içinde
+  gelişim)
+- Aylık hedef ve seri (streak) takibi
 - Öğrenci ve veli için ayrı görünümler (ör. öğrenci sadece kendi girişini
   yapabilsin, veli tüm geçmişi görsün)
 - Verileri **dışa aktarma** (CSV/PDF) — veliyle veya özel derslerle

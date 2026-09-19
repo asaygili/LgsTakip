@@ -9,3 +9,6 @@ prisma/dev.db-journal
 .DS_Store
 npm-debug.log*
 # (kalıcı disk gerekmez; veriler Postgres'te tutulur)
+
+# typescript
+*.tsbuildinfo

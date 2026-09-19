@@ -38,6 +38,7 @@ export async function createDailyLog(formData: FormData) {
 
   revalidatePath("/sorular");
   revalidatePath("/");
+  revalidatePath("/analiz");
 }
 
 export async function deleteDailyLog(id: string) {
@@ -45,4 +46,5 @@ export async function deleteDailyLog(id: string) {
   await prisma.dailyLog.delete({ where: { id } });
   revalidatePath("/sorular");
   revalidatePath("/");
+  revalidatePath("/analiz");
 }

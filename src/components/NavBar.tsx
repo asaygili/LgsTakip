@@ -4,14 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 
+// short: alt menüde 8 sekme telefon genişliğine sığmadığı için kısa ad kullanılır.
 const LINKS = [
-  { href: "/", label: "Panel" },
-  { href: "/odevler", label: "Ödevler" },
-  { href: "/sorular", label: "Sorular" },
-  { href: "/hatalar", label: "Hatalar" },
-  { href: "/konular", label: "Konular" },
-  { href: "/denemeler", label: "Denemeler" },
-  { href: "/hedefler", label: "Hedefler" },
+  { href: "/", label: "Panel", short: "Panel" },
+  { href: "/odevler", label: "Ödevler", short: "Ödev" },
+  { href: "/sorular", label: "Sorular", short: "Soru" },
+  { href: "/hatalar", label: "Hatalar", short: "Hata" },
+  { href: "/konular", label: "Konular", short: "Konu" },
+  { href: "/denemeler", label: "Denemeler", short: "Deneme" },
+  { href: "/hedefler", label: "Hedefler", short: "Hedef" },
+  { href: "/analiz", label: "Analiz", short: "Analiz" },
 ];
 
 export default function NavBar({
@@ -80,11 +82,11 @@ export default function NavBar({
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex-1 px-1 py-2.5 text-center text-[11px] font-medium ${
+                className={`flex-1 px-0.5 py-2.5 text-center text-[11px] font-medium ${
                   active ? "text-brand-700" : "text-gray-500"
                 }`}
               >
-                {link.label}
+                {link.short}
               </Link>
             );
           })}

@@ -36,6 +36,7 @@ export async function createMistake(formData: FormData) {
 
   revalidatePath("/hatalar");
   revalidatePath("/");
+  revalidatePath("/analiz");
 }
 
 export async function toggleMistakeResolved(id: string, resolved: boolean) {
@@ -43,6 +44,7 @@ export async function toggleMistakeResolved(id: string, resolved: boolean) {
   await prisma.mistake.update({ where: { id }, data: { resolved } });
   revalidatePath("/hatalar");
   revalidatePath("/");
+  revalidatePath("/analiz");
 }
 
 export async function deleteMistake(id: string) {
@@ -50,4 +52,5 @@ export async function deleteMistake(id: string) {
   await prisma.mistake.delete({ where: { id } });
   revalidatePath("/hatalar");
   revalidatePath("/");
+  revalidatePath("/analiz");
 }

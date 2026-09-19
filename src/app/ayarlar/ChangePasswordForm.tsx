@@ -17,6 +17,7 @@ export default function ChangePasswordForm() {
 
   return (
     <form ref={formRef} action={formAction} className="card max-w-sm space-y-4">
+      <h2 className="font-semibold text-gray-900">Şifre Değiştir</h2>
       <div>
         <label className="label" htmlFor="currentPassword">
           Mevcut şifre
