@@ -15,7 +15,11 @@ export default async function HatalarPage() {
     }),
     prisma.mistake.findMany({
       orderBy: [{ resolved: "asc" }, { createdAt: "desc" }],
-      include: { subject: true, topic: true },
+      include: {
+        subject: true,
+        topic: true,
+        user: { select: { name: true, role: true } },
+      },
       take: 150,
     }),
   ]);

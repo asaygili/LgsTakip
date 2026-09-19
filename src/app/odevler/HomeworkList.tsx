@@ -5,6 +5,7 @@ import Image from "next/image";
 import { updateHomeworkStatus, deleteHomework, deleteHomeworkPhoto } from "./actions";
 import AddPhotoButton from "./AddPhotoButton";
 import { HOMEWORK_STATUS_LABELS, HOMEWORK_STATUS_COLORS } from "@/lib/labels";
+import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 
 type Photo = { id: string };
 
@@ -19,6 +20,7 @@ type HomeworkItem = {
   subject: { name: string };
   topic: { name: string } | null;
   photos: Photo[];
+  createdBy: Author;
 };
 
 export default function HomeworkList({ items }: { items: HomeworkItem[] }) {
@@ -40,6 +42,7 @@ export default function HomeworkList({ items }: { items: HomeworkItem[] }) {
                 <span className={`badge ${HOMEWORK_STATUS_COLORS[hw.status]}`}>
                   {HOMEWORK_STATUS_LABELS[hw.status]}
                 </span>
+                <AuthorBadge user={hw.createdBy} />
               </div>
               <p className="mt-0.5 text-xs text-gray-500">
                 {hw.subject.name}

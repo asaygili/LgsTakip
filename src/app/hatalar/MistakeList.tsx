@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { toggleMistakeResolved, deleteMistake } from "./actions";
 import { MISTAKE_REASON_LABELS } from "@/lib/labels";
+import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 
 type MistakeItem = {
   id: string;
@@ -12,6 +13,7 @@ type MistakeItem = {
   createdAt: string;
   subject: { name: string };
   topic: { name: string } | null;
+  user: Author;
 };
 
 export default function MistakeList({ items }: { items: MistakeItem[] }) {
@@ -36,6 +38,7 @@ export default function MistakeList({ items }: { items: MistakeItem[] }) {
                 {m.resolved && (
                   <span className="badge bg-emerald-100 text-emerald-700">Giderildi</span>
                 )}
+                <AuthorBadge user={m.user} />
               </div>
               {m.description && (
                 <p className="mt-1 text-sm text-gray-600">{m.description}</p>

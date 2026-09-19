@@ -18,7 +18,11 @@ export default async function SorularPage() {
     }),
     prisma.dailyLog.findMany({
       orderBy: { date: "desc" },
-      include: { subject: true, topic: true },
+      include: {
+        subject: true,
+        topic: true,
+        user: { select: { name: true, role: true } },
+      },
       take: 100,
     }),
   ]);

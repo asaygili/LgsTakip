@@ -24,7 +24,8 @@ birlikte takip edebildiği basit bir web uygulaması.
   öğrenilme durumu (başlanmadı / öğreniliyor / tekrar gerekli / öğrenildi).
 - **Denemeler**: Deneme sınavı sonuçlarını ders bazında kaydetme, net
   hesaplama, MEB katsayılarıyla tahmini LGS puanı ve geçmiş sonuçları
-  listeleme.
+  listeleme. Her denemenin yanındaki *Düzenle* düğmesiyle adı, tarihi, türü,
+  yüzdelik dilimi ve ders sonuçları sonradan değiştirilebilir.
 - **Hedefler**: Hedef liseleri taban puanıyla birlikte kaydetme ve en son
   denemenin tahmini puanıyla karşılaştırma.
 - **Analiz**: Bu haftaki hedefin gerçekleşme özeti, son 8 haftanın hedefe
@@ -40,7 +41,9 @@ birlikte takip edebildiği basit bir web uygulaması.
   girilmemişse panel uyarı gösterir.
 
 İki kullanıcı rolü vardır (veli ve öğrenci); ikisi de aynı verileri görebilir
-ve girebilir.
+ve girebilir. Ödev, soru, hata ve deneme kayıtlarının yanında kaydı kimin
+girdiği rozet olarak yazar (*Veli ekledi* / *Öğrenci ekledi*), böylece iki
+kişinin girişleri birbirine karışmaz.
 
 ## Teknolojiler
 

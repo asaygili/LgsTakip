@@ -22,6 +22,7 @@ export default async function OdevlerPage() {
         subject: true,
         topic: true,
         photos: { select: { id: true }, orderBy: { createdAt: "asc" } },
+        createdBy: { select: { name: true, role: true } },
       },
     }),
   ]);

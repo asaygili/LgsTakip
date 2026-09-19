@@ -10,7 +10,10 @@ export default async function DenemelerPage() {
     prisma.subject.findMany({ orderBy: { order: "asc" } }),
     prisma.mockExam.findMany({
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
-      include: { results: { include: { subject: true } } },
+      include: {
+        results: { include: { subject: true } },
+        user: { select: { name: true, role: true } },
+      },
       take: 50,
     }),
   ]);
@@ -27,7 +30,7 @@ export default async function DenemelerPage() {
       </div>
 
       <MockExamForm subjects={subjects} />
-      <MockExamList items={items} />
+      <MockExamList items={items} subjects={subjects} />
     </div>
   );
 }

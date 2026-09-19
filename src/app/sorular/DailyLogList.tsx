@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { deleteDailyLog } from "./actions";
 import { netOf } from "@/lib/lgs";
+import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 
 type LogItem = {
   id: string;
@@ -14,6 +15,7 @@ type LogItem = {
   notes: string | null;
   subject: { name: string };
   topic: { name: string } | null;
+  user: Author;
 };
 
 export default function DailyLogList({ items }: { items: LogItem[] }) {
@@ -37,6 +39,7 @@ export default function DailyLogList({ items }: { items: LogItem[] }) {
                 <span className="text-xs text-gray-400">
                   {new Date(log.date).toLocaleDateString("tr-TR")}
                 </span>
+                <AuthorBadge user={log.user} />
               </div>
               <div className="mt-1 flex flex-wrap gap-3 text-xs text-gray-600">
                 <span>Toplam: {total}</span>
