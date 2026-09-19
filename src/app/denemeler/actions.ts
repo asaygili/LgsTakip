@@ -17,7 +17,15 @@ export async function createMockExam(formData: FormData) {
 
   if (!name || !dateRaw || subjectIds.length === 0) return;
 
+  // Eski bir sayfadan gelmiş, artık var olmayan ders kimliklerini ele
+  const knownSubjects = await prisma.subject.findMany({
+    where: { id: { in: subjectIds } },
+    select: { id: true },
+  });
+  const knownIds = new Set(knownSubjects.map((s) => s.id));
+
   const results = subjectIds
+    .filter((subjectId) => knownIds.has(subjectId))
     .map((subjectId) => ({
       subjectId,
       correct: Number(formData.get(`correct_${subjectId}`) || 0),

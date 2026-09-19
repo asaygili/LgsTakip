@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getValidSession } from "@/lib/session";
 import SessionProvider from "@/components/SessionProvider";
 import NavBar from "@/components/NavBar";
 import "./globals.css";
@@ -15,7 +14,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getValidSession();
   const buildSha = process.env.RAILWAY_GIT_COMMIT_SHA?.slice(0, 7);
 
   return (

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { readPhotoFiles } from "@/lib/uploads";
+import { resolveSubjectAndTopic } from "@/lib/refs";
 
 export async function createHomework(formData: FormData) {
   const session = await requireSession();
@@ -19,6 +20,9 @@ export async function createHomework(formData: FormData) {
 
   if (!title || !subjectId) return;
 
+  const refs = await resolveSubjectAndTopic(subjectId, topicId);
+  if (!refs) return;
+
   const photos = await readPhotoFiles(photoFiles);
 
   await prisma.homework.create({
@@ -26,8 +30,8 @@ export async function createHomework(formData: FormData) {
       title,
       description,
       pages,
-      subjectId,
-      topicId,
+      subjectId: refs.subjectId,
+      topicId: refs.topicId,
       assignedDate: assignedDateRaw ? new Date(assignedDateRaw) : new Date(),
       dueDate: dueDateRaw ? new Date(dueDateRaw) : null,
       createdById: session.user.id,

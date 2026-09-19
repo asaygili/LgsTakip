@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
+import { resolveSubjectAndTopic } from "@/lib/refs";
 
 export async function createMistake(formData: FormData) {
   const session = await requireSession();
@@ -14,10 +15,13 @@ export async function createMistake(formData: FormData) {
 
   if (!subjectId || !reason) return;
 
+  const refs = await resolveSubjectAndTopic(subjectId, topicId);
+  if (!refs) return;
+
   await prisma.mistake.create({
     data: {
-      subjectId,
-      topicId,
+      subjectId: refs.subjectId,
+      topicId: refs.topicId,
       reason: reason as
         | "BILGI_EKSIGI"
         | "DIKKATSIZLIK"

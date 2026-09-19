@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
+import { resolveSubjectAndTopic } from "@/lib/refs";
 
 export async function createDailyLog(formData: FormData) {
   const session = await requireSession();
@@ -18,10 +19,13 @@ export async function createDailyLog(formData: FormData) {
 
   if (!subjectId || !dateRaw) return;
 
+  const refs = await resolveSubjectAndTopic(subjectId, topicId);
+  if (!refs) return;
+
   await prisma.dailyLog.create({
     data: {
-      subjectId,
-      topicId,
+      subjectId: refs.subjectId,
+      topicId: refs.topicId,
       date: new Date(dateRaw),
       questionsCorrect: Math.max(0, correct),
       questionsWrong: Math.max(0, wrong),
