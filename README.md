@@ -27,7 +27,7 @@ birlikte takip edebildiği basit bir web uygulaması.
 - **Denemeler**: Deneme sınavı sonuçlarını ders bazında kaydetme, net
   hesaplama, MEB katsayılarıyla tahmini LGS puanı ve geçmiş sonuçları
   listeleme.
-- **Hedefler**: Hedef liseleri türü (devlet / özel), kontenjanı, taban puanı ve
+- **Hedefler**: Hedef liseleri türü (devlet / özel / vakıf), kontenjanı, taban puanı ve
   yüzdelik dilimiyle kaydetme; en son denemenin tahmini puanıyla karşılaştırma.
   MEB taban puan tablosu olduğu gibi yapıştırılarak toplu eklenebilir; okul
   türü seçimi o listenin tamamına uygulanır (resmi tablolarda devlet/özel

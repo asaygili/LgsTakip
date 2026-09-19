@@ -41,4 +41,5 @@ export const EXAM_TYPE_LABELS: Record<string, string> = {
 export const SCHOOL_TYPE_LABELS: Record<string, string> = {
   DEVLET: "Devlet",
   OZEL: "Özel",
+  VAKIF: "Vakıf",
 };
