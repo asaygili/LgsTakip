@@ -11,8 +11,9 @@ export default async function OdevlerPage() {
       orderBy: { order: "asc" },
       include: { topics: { orderBy: { order: "asc" } } },
     }),
+    // Girilme sırasına göre eskiden yeniye: yeni eklenen ödev hep en altta olur.
     prisma.homework.findMany({
-      orderBy: [{ assignedDate: "desc" }, { createdAt: "desc" }],
+      orderBy: { createdAt: "asc" },
       include: {
         subject: true,
         topic: true,
@@ -26,6 +27,7 @@ export default async function OdevlerPage() {
     ...hw,
     assignedDate: hw.assignedDate.toISOString(),
     dueDate: hw.dueDate ? hw.dueDate.toISOString() : null,
+    createdAt: hw.createdAt.toISOString(),
     photos: hw.photos,
   }));
 

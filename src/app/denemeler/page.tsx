@@ -8,8 +8,10 @@ export default async function DenemelerPage() {
 
   const [subjects, exams] = await Promise.all([
     prisma.subject.findMany({ orderBy: { order: "asc" } }),
+    // Sıralama girilme zamanına göre: en son eklenen deneme listenin sonunda
+    // çıksın diye en yeni 50 deneme çekilip aşağıda ters çevriliyor.
     prisma.mockExam.findMany({
-      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      orderBy: { createdAt: "desc" },
       include: {
         results: { include: { subject: true } },
         user: { select: { name: true, role: true } },
@@ -18,7 +20,13 @@ export default async function DenemelerPage() {
     }),
   ]);
 
-  const items = exams.map((e) => ({ ...e, date: e.date.toISOString() }));
+  const items = exams
+    .map((e) => ({
+      ...e,
+      date: e.date.toISOString(),
+      createdAt: e.createdAt.toISOString(),
+    }))
+    .reverse();
 
   return (
     <div className="space-y-6">

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { deleteMockExam } from "./actions";
 import MockExamForm, { type ExamDraft, type Subject } from "./MockExamForm";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
+import CreatedAt from "@/components/CreatedAt";
 import { EXAM_TYPE_LABELS } from "@/lib/labels";
 import { netOf, calculateLgsPuan } from "@/lib/lgs";
 
@@ -22,6 +23,7 @@ type ExamItem = {
   date: string;
   type: string;
   estimatedPercentile: number | null;
+  createdAt: string;
   results: ResultItem[];
   user: Author;
 };
@@ -107,6 +109,7 @@ export default function MockExamList({
                     </>
                   )}
                 </p>
+                <CreatedAt value={exam.createdAt} />
               </div>
               <div className="flex shrink-0 flex-col items-end gap-2">
                 <button

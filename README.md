@@ -134,6 +134,23 @@ npm run start
 `npm run start`, sunucuyu başlatmadan önce `prisma migrate deploy` ve
 seed adımını otomatik çalıştırır.
 
+## Liste sıralaması
+
+Ödevler, Sorular, Hatalar ve Denemeler listeleri **girilme sırasına göre eskiden
+yeniye** dizilir; en son eklediğiniz kayıt daima listenin sonundadır. Geriye
+dönük bir tarihle kayıt girseniz bile (ör. geçen haftanın ödevi) kayıt yine en
+alta eklenir, aradığınız yerde kaybolmaz. Her kartta ayrıca **Eklendi:
+gg.aa.yyyy ss:dd** damgası vardır; bu, kaydın ne zaman girildiğini gösterir ve
+kaydın kendi tarihinden (ödevin verildiği gün, denemenin yapıldığı gün)
+ayrıdır. Saat Türkiye saatine göre yazılır.
+
+Hedef Okullar listesi bunun dışındadır: orası hedef yüzdelik dilime göre
+sıralanır, çünkü sıralamanın kendisi bilgi taşır.
+
+Analiz ve Panel ekranları bu değişiklikten etkilenmez; onlar her zaman kaydın
+kendi tarihini kullanır (deneme gelişimi denemenin yapıldığı tarihe, haftalık
+hedef çalışmanın yapıldığı güne göre hesaplanır).
+
 ## Karma testler
 
 Bazı test kitapları bir testte birden fazla konuyu karışık sorar. Böyle bir

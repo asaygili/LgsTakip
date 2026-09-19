@@ -11,8 +11,10 @@ export default async function SorularPage() {
       orderBy: { order: "asc" },
       include: { topics: { orderBy: { order: "asc" } } },
     }),
+    // Sıralama girilme zamanına göre: en son eklenen kayıt listenin sonunda
+    // çıksın diye en yeni 100 kayıt çekilip aşağıda ters çevriliyor.
     prisma.dailyLog.findMany({
-      orderBy: { date: "desc" },
+      orderBy: { createdAt: "desc" },
       include: {
         subject: true,
         topic: true,
@@ -22,7 +24,13 @@ export default async function SorularPage() {
     }),
   ]);
 
-  const items = logs.map((log) => ({ ...log, date: log.date.toISOString() }));
+  const items = logs
+    .map((log) => ({
+      ...log,
+      date: log.date.toISOString(),
+      createdAt: log.createdAt.toISOString(),
+    }))
+    .reverse();
 
   return (
     <div className="space-y-6">

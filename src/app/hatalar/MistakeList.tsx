@@ -5,6 +5,7 @@ import { toggleMistakeResolved, deleteMistake } from "./actions";
 import MistakeForm, { type MistakeDraft, type Subject } from "./MistakeForm";
 import { MISTAKE_REASON_LABELS } from "@/lib/labels";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
+import CreatedAt from "@/components/CreatedAt";
 
 type MistakeItem = {
   id: string;
@@ -70,9 +71,7 @@ export default function MistakeList({
               {m.description && (
                 <p className="mt-1 text-sm text-gray-600">{m.description}</p>
               )}
-              <p className="mt-1 text-xs text-gray-400">
-                {new Date(m.createdAt).toLocaleDateString("tr-TR")}
-              </p>
+              <CreatedAt value={m.createdAt} />
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
               <button

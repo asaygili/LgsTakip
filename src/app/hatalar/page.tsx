@@ -11,8 +11,10 @@ export default async function HatalarPage() {
       orderBy: { order: "asc" },
       include: { topics: { orderBy: { order: "asc" } } },
     }),
+    // En yeni 150 kayıt çekilir, sonra listede eskiden yeniye sıralanır:
+    // yeni eklenen kayıt hep en altta olur.
     prisma.mistake.findMany({
-      orderBy: [{ resolved: "asc" }, { createdAt: "desc" }],
+      orderBy: { createdAt: "desc" },
       include: {
         subject: true,
         topic: true,
@@ -22,7 +24,9 @@ export default async function HatalarPage() {
     }),
   ]);
 
-  const items = mistakes.map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }));
+  const items = mistakes
+    .map((m) => ({ ...m, createdAt: m.createdAt.toISOString() }))
+    .reverse();
 
   return (
     <div className="space-y-6">

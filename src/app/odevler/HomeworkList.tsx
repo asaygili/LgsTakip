@@ -7,6 +7,7 @@ import AddPhotoButton from "./AddPhotoButton";
 import HomeworkForm, { type HomeworkDraft, type Subject } from "./HomeworkForm";
 import { HOMEWORK_STATUS_LABELS, HOMEWORK_STATUS_COLORS } from "@/lib/labels";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
+import CreatedAt from "@/components/CreatedAt";
 
 type Photo = { id: string };
 
@@ -18,6 +19,7 @@ type HomeworkItem = {
   status: string;
   assignedDate: string;
   dueDate: string | null;
+  createdAt: string;
   subjectId: string;
   topicId: string | null;
   subject: { name: string };
@@ -88,6 +90,7 @@ export default function HomeworkList({
               {hw.description && (
                 <p className="mt-1 text-sm text-gray-600">{hw.description}</p>
               )}
+              <CreatedAt value={hw.createdAt} />
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
               <button

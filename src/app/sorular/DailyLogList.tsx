@@ -5,6 +5,7 @@ import { deleteDailyLog } from "./actions";
 import DailyLogForm, { type LogDraft, type Subject } from "./DailyLogForm";
 import { netOf } from "@/lib/lgs";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
+import CreatedAt from "@/components/CreatedAt";
 
 type LogItem = {
   id: string;
@@ -12,6 +13,7 @@ type LogItem = {
   topicId: string | null;
   isMixed: boolean;
   date: string;
+  createdAt: string;
   questionsCorrect: number;
   questionsWrong: number;
   questionsBlank: number;
@@ -88,6 +90,7 @@ export default function DailyLogList({
                 {log.durationMinutes && <span>Süre: {log.durationMinutes} dk</span>}
               </div>
               {log.notes && <p className="mt-1 text-sm text-gray-600">{log.notes}</p>}
+              <CreatedAt value={log.createdAt} />
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
               <button
