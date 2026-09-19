@@ -160,5 +160,6 @@ model Goal {
   id              String   @id @default("default")
   weeklyQuestions Int?
   weeklyMinutes   Int?
+  weeklyExams     Int?
   updatedAt       DateTime @updatedAt
 }

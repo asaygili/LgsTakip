@@ -12,6 +12,23 @@ export const SERIES = [
   "#008300", // 6 yeşil
 ] as const;
 
+// Konu öğrenme durumu renkleri. Sıra bilinçlidir: yan yana gelen renkler
+// (yeşil-mavi, mavi-sarı, sarı-gri) renk körlüğü testinde en iyi ayrımı verir.
+// "Başlanmadı" kasten nötr gridir — bir seri değil, "henüz yok" demektir.
+export const TOPIC_STATUS_ORDER = [
+  "OGRENILDI",
+  "OGRENILIYOR",
+  "TEKRAR_GEREKLI",
+  "BASLANMADI",
+] as const;
+
+export const TOPIC_STATUS_FILL: Record<string, string> = {
+  OGRENILDI: "#1baf7a",
+  OGRENILIYOR: "#2a78d6",
+  TEKRAR_GEREKLI: "#eda100",
+  BASLANMADI: "#8a887f",
+};
+
 export const CHART_INK = {
   grid: "#e1e0d9",
   axis: "#c3c2b7",

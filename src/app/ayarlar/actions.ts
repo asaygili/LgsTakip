@@ -54,27 +54,31 @@ export async function updateGoal(
 ): Promise<GoalState> {
   await requireSession();
 
-  const questionsRaw = String(formData.get("weeklyQuestions") || "").trim();
-  const minutesRaw = String(formData.get("weeklyMinutes") || "").trim();
+  const read = (name: string) => {
+    const raw = String(formData.get(name) || "").trim();
+    return raw ? Number(raw) : null;
+  };
 
-  const weeklyQuestions = questionsRaw ? Number(questionsRaw) : null;
-  const weeklyMinutes = minutesRaw ? Number(minutesRaw) : null;
+  const weeklyQuestions = read("weeklyQuestions");
+  const weeklyMinutes = read("weeklyMinutes");
+  const weeklyExams = read("weeklyExams");
 
-  if (
-    (weeklyQuestions !== null && (Number.isNaN(weeklyQuestions) || weeklyQuestions < 0)) ||
-    (weeklyMinutes !== null && (Number.isNaN(weeklyMinutes) || weeklyMinutes < 0))
-  ) {
-    return { error: "Hedefler 0 veya daha büyük bir sayı olmalı." };
+  const invalid = [weeklyQuestions, weeklyMinutes, weeklyExams].some(
+    (v) => v !== null && (Number.isNaN(v) || v < 0 || !Number.isInteger(v))
+  );
+  if (invalid) {
+    return { error: "Hedefler 0 veya daha büyük bir tam sayı olmalı." };
   }
 
   await prisma.goal.upsert({
     where: { id: "default" },
-    update: { weeklyQuestions, weeklyMinutes },
-    create: { id: "default", weeklyQuestions, weeklyMinutes },
+    update: { weeklyQuestions, weeklyMinutes, weeklyExams },
+    create: { id: "default", weeklyQuestions, weeklyMinutes, weeklyExams },
   });
 
   revalidatePath("/ayarlar");
   revalidatePath("/");
+  revalidatePath("/analiz");
 
   return { success: "Haftalık hedefiniz kaydedildi." };
 }

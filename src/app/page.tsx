@@ -2,33 +2,29 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import WeeklyTrendChart from "@/components/WeeklyTrendChart";
+import GoalBar from "@/components/GoalBar";
 import { HOMEWORK_STATUS_COLORS, HOMEWORK_STATUS_LABELS } from "@/lib/labels";
 import { netOf, calculateLgsPuan } from "@/lib/lgs";
-
-function startOfDay(d: Date) {
-  const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
-function startOfWeek(d: Date) {
-  const copy = startOfDay(d);
-  const day = (copy.getDay() + 6) % 7; // pazartesi = 0
-  copy.setDate(copy.getDate() - day);
-  return copy;
-}
+import { buildGoalMetrics } from "@/lib/goals";
+import { addDays, startOfToday, startOfWeek, endOfWeek, weekRangeLabel } from "@/lib/week";
 
 function dayLabel(d: Date) {
-  return d.toLocaleDateString("tr-TR", { weekday: "short", day: "numeric", month: "numeric" });
+  return d.toLocaleDateString("tr-TR", {
+    weekday: "short",
+    day: "numeric",
+    month: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 export default async function DashboardPage() {
   await requireSession();
 
-  const today = startOfDay(new Date());
-  const weekStart = new Date(today);
-  weekStart.setDate(weekStart.getDate() - 6);
-  const goalWeekStart = startOfWeek(new Date());
+  const today = startOfToday();
+  const weekStart = addDays(today, -6);
+  // Hedef haftası: pazartesi 00:00 – pazar 23:59 (Türkiye saati).
+  const goalWeekStart = startOfWeek();
+  const goalWeekEnd = endOfWeek();
 
   const [
     weekLogs,
@@ -40,6 +36,7 @@ export default async function DashboardPage() {
     goal,
     goalWeekLogs,
     lastLog,
+    goalWeekExamCount,
   ] = await Promise.all([
       prisma.dailyLog.findMany({
         where: { date: { gte: weekStart } },
@@ -63,28 +60,32 @@ export default async function DashboardPage() {
         include: { results: { include: { subject: true } } },
       }),
       prisma.goal.findUnique({ where: { id: "default" } }),
-      prisma.dailyLog.findMany({ where: { date: { gte: goalWeekStart } } }),
+      prisma.dailyLog.findMany({
+        where: { date: { gte: goalWeekStart, lt: goalWeekEnd } },
+      }),
       prisma.dailyLog.findFirst({ orderBy: { date: "desc" } }),
+      prisma.mockExam.count({ where: { date: { gte: goalWeekStart, lt: goalWeekEnd } } }),
     ]);
 
   // Haftalık hedef ilerlemesi (pazartesi başlangıçlı hafta)
-  const goalQuestionsDone = goalWeekLogs.reduce(
-    (s, l) => s + l.questionsCorrect + l.questionsWrong + l.questionsBlank,
-    0
-  );
-  const goalMinutesDone = goalWeekLogs.reduce((s, l) => s + (l.durationMinutes ?? 0), 0);
+  const goalMetrics = buildGoalMetrics(goal, {
+    questions: goalWeekLogs.reduce(
+      (s, l) => s + l.questionsCorrect + l.questionsWrong + l.questionsBlank,
+      0
+    ),
+    minutes: goalWeekLogs.reduce((s, l) => s + (l.durationMinutes ?? 0), 0),
+    exams: goalWeekExamCount,
+  });
 
   // Kaç gündür kayıt girilmemiş
   const daysSinceLastLog = lastLog
-    ? Math.floor((today.getTime() - startOfDay(lastLog.date).getTime()) / 86400000)
+    ? Math.floor((today.getTime() - lastLog.date.getTime()) / 86400000)
     : null;
 
   const days: { label: string; Doğru: number; Yanlış: number; Boş: number }[] = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + i);
-    const next = new Date(d);
-    next.setDate(next.getDate() + 1);
+    const d = addDays(weekStart, i);
+    const next = addDays(d, 1);
     const dayLogs = weekLogs.filter((l) => l.date >= d && l.date < next);
     days.push({
       label: dayLabel(d),
@@ -94,7 +95,9 @@ export default async function DashboardPage() {
     });
   }
 
-  const weekTotal = weekLogs.reduce(
+  // "Bu hafta" her yerde aynı şeyi ifade etsin diye pazartesi–pazar penceresi
+  // kullanılır; alttaki trend grafiği ise son 7 günü gösterir.
+  const weekTotal = goalWeekLogs.reduce(
     (s, l) => s + l.questionsCorrect + l.questionsWrong + l.questionsBlank,
     0
   );
@@ -160,30 +163,25 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {(goal?.weeklyQuestions || goal?.weeklyMinutes) && (
+      {goalMetrics.length > 0 && (
         <div className="card space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">Bu Haftaki Hedef</h2>
-            <Link href="/ayarlar" className="text-xs font-medium text-brand-700">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="font-semibold text-gray-900">Bu Haftaki Hedef</h2>
+              <p className="mt-0.5 text-xs text-gray-500">
+                {weekRangeLabel(goalWeekStart)} · pazar 23:59&apos;da sıfırlanır
+              </p>
+            </div>
+            <Link href="/ayarlar" className="shrink-0 text-xs font-medium text-brand-700">
               Değiştir
             </Link>
           </div>
-          {goal.weeklyQuestions ? (
-            <GoalBar
-              label="Soru"
-              done={goalQuestionsDone}
-              target={goal.weeklyQuestions}
-              unit="soru"
-            />
-          ) : null}
-          {goal.weeklyMinutes ? (
-            <GoalBar
-              label="Çalışma süresi"
-              done={goalMinutesDone}
-              target={goal.weeklyMinutes}
-              unit="dk"
-            />
-          ) : null}
+          {goalMetrics.map((m) => (
+            <GoalBar key={m.key} metric={m} />
+          ))}
+          <Link href="/analiz" className="block text-xs font-medium text-brand-700">
+            Geçmiş haftalarla karşılaştır →
+          </Link>
         </div>
       )}
 
@@ -268,38 +266,6 @@ export default async function DashboardPage() {
           </p>
         </div>
       )}
-    </div>
-  );
-}
-
-function GoalBar({
-  label,
-  done,
-  target,
-  unit,
-}: {
-  label: string;
-  done: number;
-  target: number;
-  unit: string;
-}) {
-  const pct = Math.min(100, Math.round((done / target) * 100));
-  const reached = done >= target;
-
-  return (
-    <div>
-      <div className="mb-1 flex items-baseline justify-between text-xs">
-        <span className="text-gray-600">{label}</span>
-        <span className={reached ? "font-medium text-emerald-700" : "text-gray-500"}>
-          {done} / {target} {unit} (%{pct})
-        </span>
-      </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-        <div
-          className={`h-full rounded-full ${reached ? "bg-emerald-500" : "bg-brand-600"}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
     </div>
   );
 }

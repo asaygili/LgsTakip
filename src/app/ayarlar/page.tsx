@@ -20,6 +20,7 @@ export default async function AyarlarPage() {
       <GoalForm
         weeklyQuestions={goal?.weeklyQuestions ?? null}
         weeklyMinutes={goal?.weeklyMinutes ?? null}
+        weeklyExams={goal?.weeklyExams ?? null}
       />
 
       <ChangePasswordForm />

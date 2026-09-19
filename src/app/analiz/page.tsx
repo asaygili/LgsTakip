@@ -1,45 +1,144 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { netOf, calculateLgsPuan } from "@/lib/lgs";
-import { MISTAKE_REASON_LABELS } from "@/lib/labels";
+import { MISTAKE_REASON_LABELS, TOPIC_STATUS_LABELS } from "@/lib/labels";
+import { TOPIC_STATUS_ORDER, TOPIC_STATUS_FILL } from "@/lib/chart";
+import { buildGoalMetrics, type GoalMetric } from "@/lib/goals";
+import { addWeeks, startOfWeek, endOfWeek, shortDate, weekRangeLabel } from "@/lib/week";
+import GoalBar from "@/components/GoalBar";
 import ChartCard from "@/components/charts/ChartCard";
 import ScoreTrendChart from "@/components/charts/ScoreTrendChart";
-import SubjectNetTrendChart from "@/components/charts/SubjectNetTrendChart";
+import MultiLineChart from "@/components/charts/MultiLineChart";
 import HorizontalBarChart from "@/components/charts/HorizontalBarChart";
 import AccuracyTrendChart from "@/components/charts/AccuracyTrendChart";
+import StackedPercentChart from "@/components/charts/StackedPercentChart";
 
-function shortDate(d: Date) {
-  return d.toLocaleDateString("tr-TR", { day: "numeric", month: "short" });
-}
+const HISTORY_WEEKS = 8;
 
-function startOfWeek(d: Date) {
-  const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
-  const day = (copy.getDay() + 6) % 7; // pazartesi = 0
-  copy.setDate(copy.getDate() - day);
-  return copy;
+/**
+ * Yığılmış bar tam %100 etsin diye tamsayı yüzdeleri en büyük kalan yöntemiyle
+ * dağıtır; yuvarlamadan doğan 0.1'lik taşmalar ekseni bozuyordu.
+ */
+function wholePercents(counts: number[], total: number) {
+  const raw = counts.map((c) => (c / total) * 100);
+  const result = raw.map(Math.floor);
+  let rest = 100 - result.reduce((a, b) => a + b, 0);
+  const byFraction = raw
+    .map((v, i) => ({ i, fraction: v - Math.floor(v) }))
+    .sort((a, b) => b.fraction - a.fraction);
+  for (const { i } of byFraction) {
+    if (rest <= 0) break;
+    result[i] += 1;
+    rest -= 1;
+  }
+  return result;
 }
 
 export default async function AnalizPage() {
   await requireSession();
 
-  const [exams, subjects, mistakes, dailyLogs, targetSchools] = await Promise.all([
-    prisma.mockExam.findMany({
-      orderBy: [{ date: "asc" }, { createdAt: "asc" }],
-      include: { results: { include: { subject: true } } },
-      take: 40,
-    }),
-    prisma.subject.findMany({ orderBy: { order: "asc" } }),
-    prisma.mistake.findMany({ include: { subject: true, topic: true } }),
-    prisma.dailyLog.findMany({
-      orderBy: { date: "asc" },
-      include: { topic: true, subject: true },
-    }),
-    prisma.targetSchool.findMany({
-      where: { cutoffScore: { not: null } },
-      orderBy: { cutoffScore: "asc" },
-    }),
-  ]);
+  const thisWeekStart = startOfWeek();
+  const thisWeekEnd = endOfWeek();
+  const historyStart = addWeeks(thisWeekStart, -(HISTORY_WEEKS - 1));
+
+  const [exams, subjects, mistakes, dailyLogs, targetSchools, goal, topics] =
+    await Promise.all([
+      prisma.mockExam.findMany({
+        orderBy: [{ date: "asc" }, { createdAt: "asc" }],
+        include: { results: { include: { subject: true } } },
+        take: 40,
+      }),
+      prisma.subject.findMany({ orderBy: { order: "asc" } }),
+      prisma.mistake.findMany({ include: { subject: true, topic: true } }),
+      prisma.dailyLog.findMany({
+        orderBy: { date: "asc" },
+        include: { topic: true, subject: true },
+      }),
+      prisma.targetSchool.findMany({
+        where: { cutoffScore: { not: null } },
+        orderBy: { cutoffScore: "asc" },
+      }),
+      prisma.goal.findUnique({ where: { id: "default" } }),
+      prisma.topic.findMany({ include: { subject: true } }),
+    ]);
+
+  // --- Bu haftaki hedef gerçekleşmesi ---
+  const thisWeekLogs = dailyLogs.filter(
+    (l) => l.date >= thisWeekStart && l.date < thisWeekEnd
+  );
+  const goalMetrics = buildGoalMetrics(goal, {
+    questions: thisWeekLogs.reduce(
+      (s, l) => s + l.questionsCorrect + l.questionsWrong + l.questionsBlank,
+      0
+    ),
+    minutes: thisWeekLogs.reduce((s, l) => s + (l.durationMinutes ?? 0), 0),
+    exams: exams.filter((e) => e.date >= thisWeekStart && e.date < thisWeekEnd).length,
+  });
+
+  // --- Son 8 haftanın hedefe ulaşma oranı ---
+  const historyWeeks = Array.from({ length: HISTORY_WEEKS }, (_, i) =>
+    addWeeks(historyStart, i)
+  );
+  const goalHistoryRows = historyWeeks.map((weekStart) => {
+    const weekEnd = addWeeks(weekStart, 1);
+    const logs = dailyLogs.filter((l) => l.date >= weekStart && l.date < weekEnd);
+    const metrics = buildGoalMetrics(goal, {
+      questions: logs.reduce(
+        (s, l) => s + l.questionsCorrect + l.questionsWrong + l.questionsBlank,
+        0
+      ),
+      minutes: logs.reduce((s, l) => s + (l.durationMinutes ?? 0), 0),
+      exams: exams.filter((e) => e.date >= weekStart && e.date < weekEnd).length,
+    });
+    const row: Record<string, string | number> = { label: shortDate(weekStart) };
+    for (const m of metrics) row[m.label] = m.percent;
+    return { weekStart, row, metrics };
+  });
+  const goalSeries = goalMetrics.map((m) => m.label);
+  const goalHistoryMax = Math.max(
+    120,
+    ...goalHistoryRows.flatMap((r) => r.metrics.map((m) => m.percent))
+  );
+
+  // --- Ders bazında konu öğrenme durumu ---
+  const statusKeys = [...TOPIC_STATUS_ORDER];
+  const statusLabels = statusKeys.map((k) => TOPIC_STATUS_LABELS[k]);
+  const topicRows = subjects
+    .map((subject) => {
+      const own = topics.filter((t) => t.subjectId === subject.id);
+      if (own.length === 0) return null;
+
+      const counts = Object.fromEntries(
+        statusKeys.map((k) => [k, own.filter((t) => t.status === k).length])
+      ) as Record<string, number>;
+
+      const percents = wholePercents(
+        statusKeys.map((k) => counts[k]),
+        own.length
+      );
+      const row: Record<string, string | number> = { label: subject.name };
+      statusKeys.forEach((key, i) => {
+        const label = TOPIC_STATUS_LABELS[key];
+        row[label] = percents[i];
+        row[`${label}__n`] = counts[key];
+      });
+      // "Tamamlanan" = öğrenildi; tekrar gerekli olanlar henüz bitmiş sayılmaz.
+      const donePercent = percents[statusKeys.indexOf("OGRENILDI")];
+      return {
+        subject: subject.name,
+        total: own.length,
+        counts,
+        percents,
+        row,
+        donePercent,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+
+  const topicTotal = topicRows.reduce((s, r) => s + r.total, 0);
+  const topicDone = topicRows.reduce((s, r) => s + r.counts.OGRENILDI, 0);
+  const weakestSubject = [...topicRows].sort((a, b) => a.donePercent - b.donePercent)[0];
 
   // --- Deneme: tahmini puan gelişimi ---
   const scorePoints = exams
@@ -110,7 +209,7 @@ export default async function AnalizPage() {
   }
   const accuracyPoints = Array.from(weekBuckets.entries())
     .sort((a, b) => a[0] - b[0])
-    .slice(-8)
+    .slice(-HISTORY_WEEKS)
     .filter(([, b]) => b.correct + b.wrong > 0)
     .map(([week, b]) => ({
       label: shortDate(new Date(week)),
@@ -170,6 +269,87 @@ export default async function AnalizPage() {
           Kaydettiğiniz verilerden çıkan gelişim ve zayıf nokta özeti.
         </p>
       </div>
+
+      {goalMetrics.length > 0 ? (
+        <section className="card space-y-3">
+          <div>
+            <h2 className="font-semibold text-gray-900">Bu Haftaki Hedef</h2>
+            <p className="mt-0.5 text-xs text-gray-500">
+              {weekRangeLabel(thisWeekStart)} · pazar 23:59&apos;da sıfırlanır
+            </p>
+          </div>
+          {goalMetrics.map((m) => (
+            <GoalBar key={m.key} metric={m} />
+          ))}
+          <GoalSummaryTable metrics={goalMetrics} />
+        </section>
+      ) : (
+        <section className="card">
+          <p className="text-sm text-gray-600">
+            Haftalık hedef girilmemiş.{" "}
+            <Link href="/ayarlar" className="font-medium text-brand-700 underline">
+              Ayarlar&apos;dan hedef belirleyin
+            </Link>{" "}
+            — gerçekleşme oranı burada takip edilir.
+          </p>
+        </section>
+      )}
+
+      {goalSeries.length > 0 && (
+        <ChartCard
+          title="Son 8 Hafta Hedef Gerçekleşme"
+          description="Her hafta hedefin yüzde kaçı tamamlandı. Kesikli çizgi %100, yani hedefin tam karşılığı. En sağdaki hafta hâlâ devam ediyor."
+          table={{
+            columns: ["Hafta", ...goalSeries.map((s) => `${s} (%)`)],
+            rows: goalHistoryRows.map((r) => [
+              weekRangeLabel(r.weekStart),
+              ...goalSeries.map((s) => {
+                const m = r.metrics.find((x) => x.label === s);
+                return m ? `${m.done}/${m.target} (%${m.percent})` : "-";
+              }),
+            ]),
+          }}
+        >
+          <MultiLineChart
+            data={goalHistoryRows.map((r) => r.row)}
+            series={goalSeries}
+            unit="%"
+            domain={[0, goalHistoryMax]}
+            referenceY={100}
+            referenceLabel="Hedef %100"
+          />
+        </ChartCard>
+      )}
+
+      {topicRows.length > 0 && (
+        <ChartCard
+          title="Ders Bazında Konu Durumu"
+          description={
+            weakestSubject
+              ? `Toplam ${topicTotal} konunun ${topicDone} tanesi öğrenildi (%${Math.round(
+                  (topicDone / topicTotal) * 100
+                )}). En geride kalan ders: ${weakestSubject.subject}.`
+              : undefined
+          }
+          table={{
+            columns: ["Ders", "Konu", ...statusLabels, "Eksik"],
+            rows: topicRows.map((r) => [
+              r.subject,
+              r.total,
+              ...statusKeys.map((k, i) => `${r.counts[k]} (%${r.percents[i]})`),
+              `%${100 - r.donePercent}`,
+            ]),
+          }}
+        >
+          <StackedPercentChart
+            data={topicRows.map((r) => r.row)}
+            keys={statusLabels}
+            colors={statusKeys.map((k) => TOPIC_STATUS_FILL[k])}
+            countUnit="konu"
+            height={Math.max(220, topicRows.length * 44 + 60)}
+          />
+        </ChartCard>
+      )}
 
       {weakTopics.length > 0 && (
         <section className="card">
@@ -242,7 +422,7 @@ export default async function AnalizPage() {
             ]),
           }}
         >
-          <SubjectNetTrendChart data={netRows} subjects={usedSubjects} />
+          <MultiLineChart data={netRows} series={usedSubjects} />
         </ChartCard>
       )}
 
@@ -310,6 +490,48 @@ export default async function AnalizPage() {
           />
         </ChartCard>
       )}
+    </div>
+  );
+}
+
+/** Hedeflerin sayısal dökümü: hedef, gerçekleşen, eksik/fazla. */
+function GoalSummaryTable({ metrics }: { metrics: GoalMetric[] }) {
+  return (
+    <div className="-mx-1 overflow-x-auto pt-1">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-gray-200 text-left text-gray-500">
+            <th className="px-1 py-1.5 font-medium">Hedef</th>
+            <th className="px-1 py-1.5 font-medium">Haftalık</th>
+            <th className="px-1 py-1.5 font-medium">Gerçekleşen</th>
+            <th className="px-1 py-1.5 font-medium">Eksik</th>
+            <th className="px-1 py-1.5 font-medium">Oran</th>
+          </tr>
+        </thead>
+        <tbody>
+          {metrics.map((m) => (
+            <tr key={m.key} className="border-b border-gray-100 last:border-0">
+              <td className="px-1 py-1.5 text-gray-700">{m.label}</td>
+              <td className="px-1 py-1.5 tabular-nums text-gray-700">{m.target}</td>
+              <td className="px-1 py-1.5 tabular-nums text-gray-700">{m.done}</td>
+              <td
+                className={`px-1 py-1.5 tabular-nums ${
+                  m.reached ? "text-emerald-700" : "text-red-600"
+                }`}
+              >
+                {m.reached ? `+${m.surplus}` : m.remaining}
+              </td>
+              <td
+                className={`px-1 py-1.5 tabular-nums ${
+                  m.reached ? "font-medium text-emerald-700" : "text-gray-700"
+                }`}
+              >
+                %{m.percent}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

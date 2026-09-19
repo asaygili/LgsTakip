@@ -27,13 +27,17 @@ birlikte takip edebildiği basit bir web uygulaması.
   listeleme.
 - **Hedefler**: Hedef liseleri taban puanıyla birlikte kaydetme ve en son
   denemenin tahmini puanıyla karşılaştırma.
-- **Analiz**: Tahmini puan gelişimi, ders bazında net gelişimi, son denemede
-  ders bazlı net, haftalık doğruluk oranı, hata nedeni dağılımı, konu bazlı
-  hata sayısı ve **zayıf konu radarı**. Her grafiğin sağ üstündeki *Tablo*
-  düğmesiyle aynı veri sayı sayı da okunabilir.
-- **Ayarlar**: Şifre değiştirme ve haftalık hedef (soru sayısı / çalışma
-  süresi) belirleme. Hedef girildiğinde panelde ilerleme çubuğu çıkar; iki
-  gündür kayıt girilmemişse panel uyarı gösterir.
+- **Analiz**: Bu haftaki hedefin gerçekleşme özeti, son 8 haftanın hedefe
+  ulaşma oranı, **ders bazında konu durumu** (hangi dersin yüzde kaçı
+  öğrenildi / öğreniliyor / tekrar gerekli / başlanmadı), zayıf konu radarı,
+  tahmini puan gelişimi, ders bazında net gelişimi, son denemede ders bazlı
+  net, haftalık doğruluk oranı, hata nedeni dağılımı ve konu bazlı hata
+  sayısı. Her grafiğin sağ üstündeki *Tablo* düğmesiyle aynı veri sayı sayı da
+  okunabilir.
+- **Ayarlar**: Şifre değiştirme ve haftalık hedef belirleme — soru sayısı,
+  çalışma süresi (dakika) ve deneme sayısı. Hedef girildiğinde panelde
+  ilerleme çubuğu ve "ne kadar eksik kaldı" bilgisi çıkar; iki gündür kayıt
+  girilmemişse panel uyarı gösterir.
 
 İki kullanıcı rolü vardır (veli ve öğrenci); ikisi de aynı verileri görebilir
 ve girebilir.
@@ -121,6 +125,18 @@ npm run start
 `npm run start`, sunucuyu başlatmadan önce `prisma migrate deploy` ve
 seed adımını otomatik çalıştırır.
 
+## Haftalık hedefler nasıl sayılır?
+
+Hafta **pazartesi 00:00'da başlar, pazar 23:59'da biter**; pazar gece yarısını
+geçince sayaçlar sıfırdan başlar. Sunucu (Railway) UTC saatiyle çalıştığı için
+hafta sınırları `src/lib/week.ts` içinde açıkça `Europe/Istanbul` saatine göre
+hesaplanır — yani hedefin ne zaman sıfırlanacağı sunucunun bulunduğu bölgeye
+göre kaymaz.
+
+"Bu hafta" ifadesi uygulamanın her yerinde bu pazartesi–pazar penceresini
+gösterir. Paneldeki *Son 7 Gün Soru Trendi* grafiği ise adı üstünde son yedi
+günü gösterir; ikisi kasıtlı olarak farklıdır.
+
 ## Veri modeli
 
 Tüm veriler PostgreSQL veritabanında tutulur. Ödev fotoğrafları da diskte
@@ -139,6 +155,7 @@ Fotoğraf başına en fazla 8MB, tek istekte en fazla 20MB kabul edilir
 - Konu bazlı **net/doğruluk trend grafiği** (tek bir konuda zaman içinde
   gelişim)
 - Aylık hedef ve seri (streak) takibi
+- Tek bir konunun zaman içindeki doğruluk değişimi
 - Öğrenci ve veli için ayrı görünümler (ör. öğrenci sadece kendi girişini
   yapabilsin, veli tüm geçmişi görsün)
 - Verileri **dışa aktarma** (CSV/PDF) — veliyle veya özel derslerle
