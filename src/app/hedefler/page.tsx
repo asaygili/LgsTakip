@@ -13,7 +13,7 @@ export default async function HedeflerPage() {
       orderBy: { targetPercentile: "asc" },
     }),
     prisma.mockExam.findFirst({
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       include: { results: { include: { subject: true } } },
     }),
   ]);

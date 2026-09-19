@@ -9,7 +9,7 @@ export default async function DenemelerPage() {
   const [subjects, exams] = await Promise.all([
     prisma.subject.findMany({ orderBy: { order: "asc" } }),
     prisma.mockExam.findMany({
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       include: { results: { include: { subject: true } } },
       take: 50,
     }),

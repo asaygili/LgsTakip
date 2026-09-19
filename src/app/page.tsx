@@ -42,7 +42,7 @@ export default async function DashboardPage() {
       }),
       prisma.topic.groupBy({ by: ["status"], _count: { _all: true } }),
       prisma.mockExam.findFirst({
-        orderBy: { date: "desc" },
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
         include: { results: { include: { subject: true } } },
       }),
     ]);

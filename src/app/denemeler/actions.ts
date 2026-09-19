@@ -55,6 +55,7 @@ export async function createMockExam(formData: FormData) {
   });
 
   revalidatePath("/denemeler");
+  revalidatePath("/hedefler");
   revalidatePath("/");
 }
 
@@ -62,5 +63,6 @@ export async function deleteMockExam(id: string) {
   await requireSession();
   await prisma.mockExam.delete({ where: { id } });
   revalidatePath("/denemeler");
+  revalidatePath("/hedefler");
   revalidatePath("/");
 }
