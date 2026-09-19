@@ -1,12 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
-import SubjectTopicSelect from "@/components/SubjectTopicSelect";
+import HomeworkForm from "./HomeworkForm";
 import HomeworkList from "./HomeworkList";
-import { createHomework } from "./actions";
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export default async function OdevlerPage() {
   await requireSession();
@@ -43,46 +38,9 @@ export default async function OdevlerPage() {
         </p>
       </div>
 
-      <form action={createHomework} className="card space-y-3">
-        <div>
-          <label className="label">Ödev başlığı</label>
-          <input name="title" className="input" placeholder="Örn: Test kitabı testleri" required />
-        </div>
-        <SubjectTopicSelect subjects={subjects} />
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="label">Sayfa aralığı (opsiyonel)</label>
-            <input name="pages" className="input" placeholder="Örn: 45-48" />
-          </div>
-          <div>
-            <label className="label">Son tarih (opsiyonel)</label>
-            <input type="date" name="dueDate" className="input" />
-          </div>
-        </div>
-        <div>
-          <label className="label">Verildiği tarih</label>
-          <input type="date" name="assignedDate" className="input" defaultValue={todayStr()} required />
-        </div>
-        <div>
-          <label className="label">Açıklama (opsiyonel)</label>
-          <textarea name="description" className="input" rows={2} />
-        </div>
-        <div>
-          <label className="label">Ders fotoğrafı (opsiyonel, birden fazla seçilebilir)</label>
-          <input
-            type="file"
-            name="photos"
-            accept="image/*"
-            multiple
-            className="input file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-brand-700"
-          />
-        </div>
-        <button type="submit" className="btn-primary">
-          Ödev Ekle
-        </button>
-      </form>
+      <HomeworkForm subjects={subjects} />
 
-      <HomeworkList items={items} />
+      <HomeworkList items={items} subjects={subjects} />
     </div>
   );
 }

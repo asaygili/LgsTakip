@@ -4,40 +4,85 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 
-export async function createTargetSchool(formData: FormData) {
-  const session = await requireSession();
+export type TargetSchoolState = { error?: string; success?: string };
 
+type ParsedSchoolForm = {
+  name: string;
+  location: string | null;
+  targetPercentile: number;
+  cutoffScore: number | null;
+  note: string | null;
+};
+
+/** Form alanlarını okur; eksik/geçersizse hata mesajı döndürür. */
+function parseSchoolForm(formData: FormData): ParsedSchoolForm | string {
   const name = String(formData.get("name") || "").trim();
   const location = String(formData.get("location") || "").trim() || null;
   const percentileRaw = String(formData.get("targetPercentile") || "").replace(",", ".");
   const cutoffScoreRaw = String(formData.get("cutoffScore") || "").replace(",", ".");
   const note = String(formData.get("note") || "").trim() || null;
 
+  if (!name) return "Okul adı gerekli.";
+
   const targetPercentile = Number(percentileRaw);
-  if (!name || !percentileRaw || Number.isNaN(targetPercentile) || targetPercentile <= 0 || targetPercentile > 100) {
-    return;
+  if (
+    !percentileRaw ||
+    Number.isNaN(targetPercentile) ||
+    targetPercentile <= 0 ||
+    targetPercentile > 100
+  ) {
+    return "Hedef yüzdelik dilim 0 ile 100 arasında bir sayı olmalı.";
   }
+
   const cutoffScore =
     cutoffScoreRaw && !Number.isNaN(Number(cutoffScoreRaw)) ? Number(cutoffScoreRaw) : null;
 
-  await prisma.targetSchool.create({
-    data: {
-      name,
-      location,
-      targetPercentile,
-      cutoffScore,
-      note,
-      userId: session.user.id,
-    },
-  });
+  return { name, location, targetPercentile, cutoffScore, note };
+}
+
+export async function createTargetSchool(
+  _prevState: TargetSchoolState,
+  formData: FormData
+): Promise<TargetSchoolState> {
+  const session = await requireSession();
+
+  const parsed = parseSchoolForm(formData);
+  if (typeof parsed === "string") return { error: parsed };
+
+  await prisma.targetSchool.create({ data: { ...parsed, userId: session.user.id } });
 
   revalidatePath("/hedefler");
+  revalidatePath("/analiz");
+  return { success: "Okul eklendi." };
+}
+
+export async function updateTargetSchool(
+  _prevState: TargetSchoolState,
+  formData: FormData
+): Promise<TargetSchoolState> {
+  await requireSession();
+
+  const id = String(formData.get("id") || "");
+  if (!id) return { error: "Güncellenecek okul bulunamadı." };
+
+  const existing = await prisma.targetSchool.findUnique({ where: { id }, select: { id: true } });
+  if (!existing) return { error: "Bu okul silinmiş görünüyor." };
+
+  const parsed = parseSchoolForm(formData);
+  if (typeof parsed === "string") return { error: parsed };
+
+  await prisma.targetSchool.update({ where: { id }, data: parsed });
+
+  revalidatePath("/hedefler");
+  revalidatePath("/analiz");
+  return { success: "Okul güncellendi." };
 }
 
 export async function deleteTargetSchool(id: string) {
   await requireSession();
   await prisma.targetSchool.delete({ where: { id } });
   revalidatePath("/hedefler");
+  revalidatePath("/analiz");
 }
 
 export type BulkImportState = {

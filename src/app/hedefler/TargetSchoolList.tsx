@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { deleteTargetSchool } from "./actions";
+import TargetSchoolForm, { type SchoolDraft } from "./TargetSchoolForm";
 
 type TargetSchoolItem = {
   id: string;
@@ -64,6 +65,7 @@ export default function TargetSchoolList({
   studentPercentile: number | null;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
     return <p className="text-sm text-gray-500">Henüz hedef okul eklenmedi.</p>;
@@ -72,6 +74,26 @@ export default function TargetSchoolList({
   return (
     <ul className="space-y-2">
       {items.map((school) => {
+        if (editingId === school.id) {
+          return (
+            <li key={school.id}>
+              <TargetSchoolForm
+                school={
+                  {
+                    id: school.id,
+                    name: school.name,
+                    location: school.location,
+                    targetPercentile: school.targetPercentile,
+                    cutoffScore: school.cutoffScore,
+                    note: school.note,
+                  } satisfies SchoolDraft
+                }
+                onDone={() => setEditingId(null)}
+              />
+            </li>
+          );
+        }
+
         const status = statusFor(studentPuan, studentPercentile, school);
         return (
           <li key={school.id} className="card flex items-start justify-between gap-3">
@@ -86,13 +108,21 @@ export default function TargetSchoolList({
               {school.note && <p className="text-xs text-gray-400">{school.note}</p>}
               <span className={`badge mt-1.5 ${status.color}`}>{status.label}</span>
             </div>
-            <button
-              disabled={isPending}
-              onClick={() => startTransition(() => deleteTargetSchool(school.id))}
-              className="shrink-0 text-xs text-gray-400 hover:text-red-600"
-            >
-              Sil
-            </button>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <button
+                onClick={() => setEditingId(school.id)}
+                className="text-xs font-medium text-brand-700 hover:underline"
+              >
+                Düzenle
+              </button>
+              <button
+                disabled={isPending}
+                onClick={() => startTransition(() => deleteTargetSchool(school.id))}
+                className="text-xs text-gray-400 hover:text-red-600"
+              >
+                Sil
+              </button>
+            </div>
           </li>
         );
       })}

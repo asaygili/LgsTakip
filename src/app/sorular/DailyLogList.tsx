@@ -1,12 +1,15 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { deleteDailyLog } from "./actions";
+import DailyLogForm, { type LogDraft, type Subject } from "./DailyLogForm";
 import { netOf } from "@/lib/lgs";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 
 type LogItem = {
   id: string;
+  subjectId: string;
+  topicId: string | null;
   date: string;
   questionsCorrect: number;
   questionsWrong: number;
@@ -18,8 +21,15 @@ type LogItem = {
   user: Author;
 };
 
-export default function DailyLogList({ items }: { items: LogItem[] }) {
+export default function DailyLogList({
+  items,
+  subjects,
+}: {
+  items: LogItem[];
+  subjects: Subject[];
+}) {
   const [isPending, startTransition] = useTransition();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
     return <p className="text-sm text-gray-500">Henüz kayıt eklenmedi.</p>;
@@ -28,6 +38,29 @@ export default function DailyLogList({ items }: { items: LogItem[] }) {
   return (
     <ul className="space-y-2">
       {items.map((log) => {
+        if (editingId === log.id) {
+          const draft: LogDraft = {
+            id: log.id,
+            subjectId: log.subjectId,
+            topicId: log.topicId,
+            date: log.date,
+            questionsCorrect: log.questionsCorrect,
+            questionsWrong: log.questionsWrong,
+            questionsBlank: log.questionsBlank,
+            durationMinutes: log.durationMinutes,
+            notes: log.notes,
+          };
+          return (
+            <li key={log.id}>
+              <DailyLogForm
+                subjects={subjects}
+                log={draft}
+                onDone={() => setEditingId(null)}
+              />
+            </li>
+          );
+        }
+
         const total = log.questionsCorrect + log.questionsWrong + log.questionsBlank;
         const net = netOf({ correct: log.questionsCorrect, wrong: log.questionsWrong });
         return (
@@ -51,13 +84,21 @@ export default function DailyLogList({ items }: { items: LogItem[] }) {
               </div>
               {log.notes && <p className="mt-1 text-sm text-gray-600">{log.notes}</p>}
             </div>
-            <button
-              disabled={isPending}
-              onClick={() => startTransition(() => deleteDailyLog(log.id))}
-              className="shrink-0 text-xs text-gray-400 hover:text-red-600"
-            >
-              Sil
-            </button>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <button
+                onClick={() => setEditingId(log.id)}
+                className="text-xs font-medium text-brand-700 hover:underline"
+              >
+                Düzenle
+              </button>
+              <button
+                disabled={isPending}
+                onClick={() => startTransition(() => deleteDailyLog(log.id))}
+                className="text-xs text-gray-400 hover:text-red-600"
+              >
+                Sil
+              </button>
+            </div>
           </li>
         );
       })}

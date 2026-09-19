@@ -1,7 +1,8 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toggleMistakeResolved, deleteMistake } from "./actions";
+import MistakeForm, { type MistakeDraft, type Subject } from "./MistakeForm";
 import { MISTAKE_REASON_LABELS } from "@/lib/labels";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 
@@ -11,13 +12,22 @@ type MistakeItem = {
   reason: string;
   resolved: boolean;
   createdAt: string;
+  subjectId: string;
+  topicId: string | null;
   subject: { name: string };
   topic: { name: string } | null;
   user: Author;
 };
 
-export default function MistakeList({ items }: { items: MistakeItem[] }) {
+export default function MistakeList({
+  items,
+  subjects,
+}: {
+  items: MistakeItem[];
+  subjects: Subject[];
+}) {
   const [isPending, startTransition] = useTransition();
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
     return <p className="text-sm text-gray-500">Henüz hata kaydı eklenmedi.</p>;
@@ -25,7 +35,24 @@ export default function MistakeList({ items }: { items: MistakeItem[] }) {
 
   return (
     <ul className="space-y-2">
-      {items.map((m) => (
+      {items.map((m) =>
+        editingId === m.id ? (
+          <li key={m.id}>
+            <MistakeForm
+              subjects={subjects}
+              mistake={
+                {
+                  id: m.id,
+                  subjectId: m.subjectId,
+                  topicId: m.topicId,
+                  reason: m.reason,
+                  description: m.description,
+                } satisfies MistakeDraft
+              }
+              onDone={() => setEditingId(null)}
+            />
+          </li>
+        ) : (
         <li key={m.id} className={`card ${m.resolved ? "opacity-60" : ""}`}>
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -58,6 +85,12 @@ export default function MistakeList({ items }: { items: MistakeItem[] }) {
                 {m.resolved ? "Geri al" : "Giderildi işaretle"}
               </button>
               <button
+                onClick={() => setEditingId(m.id)}
+                className="text-xs font-medium text-brand-700 hover:underline"
+              >
+                Düzenle
+              </button>
+              <button
                 disabled={isPending}
                 onClick={() => startTransition(() => deleteMistake(m.id))}
                 className="text-xs text-gray-400 hover:text-red-600"
@@ -67,7 +100,8 @@ export default function MistakeList({ items }: { items: MistakeItem[] }) {
             </div>
           </div>
         </li>
-      ))}
+        )
+      )}
     </ul>
   );
 }

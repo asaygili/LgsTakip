@@ -6,9 +6,25 @@ import { requireSession } from "@/lib/session";
 import { readPhotoFiles } from "@/lib/uploads";
 import { resolveSubjectAndTopic } from "@/lib/refs";
 
-export async function createHomework(formData: FormData) {
-  const session = await requireSession();
+export type HomeworkState = { error?: string; success?: string };
 
+type ParsedHomework = {
+  title: string;
+  description: string | null;
+  pages: string | null;
+  subjectId: string;
+  topicId: string | null;
+  assignedDate: Date;
+  dueDate: Date | null;
+};
+
+function revalidateHomeworkPages() {
+  revalidatePath("/odevler");
+  revalidatePath("/");
+}
+
+/** Form alanlarını okur; eksik/geçersizse hata mesajı döndürür. */
+async function parseHomeworkForm(formData: FormData): Promise<ParsedHomework | string> {
   const title = String(formData.get("title") || "").trim();
   const subjectId = String(formData.get("subjectId") || "");
   const topicId = String(formData.get("topicId") || "") || null;
@@ -16,33 +32,69 @@ export async function createHomework(formData: FormData) {
   const pages = String(formData.get("pages") || "").trim() || null;
   const assignedDateRaw = String(formData.get("assignedDate") || "");
   const dueDateRaw = String(formData.get("dueDate") || "");
-  const photoFiles = formData.getAll("photos").filter((f): f is File => f instanceof File);
 
-  if (!title || !subjectId) return;
+  if (!title) return "Ödev başlığı gerekli.";
+  if (!subjectId) return "Ders seçin.";
 
+  // Sayfa uzun süre açık kaldıysa ders/konu silinmiş olabilir.
   const refs = await resolveSubjectAndTopic(subjectId, topicId);
-  if (!refs) return;
+  if (!refs) return "Seçtiğiniz ders veya konu artık yok, sayfayı yenileyin.";
 
+  return {
+    title,
+    description,
+    pages,
+    subjectId: refs.subjectId,
+    topicId: refs.topicId,
+    assignedDate: assignedDateRaw ? new Date(assignedDateRaw) : new Date(),
+    dueDate: dueDateRaw ? new Date(dueDateRaw) : null,
+  };
+}
+
+export async function createHomework(
+  _prevState: HomeworkState,
+  formData: FormData
+): Promise<HomeworkState> {
+  const session = await requireSession();
+
+  const parsed = await parseHomeworkForm(formData);
+  if (typeof parsed === "string") return { error: parsed };
+
+  const photoFiles = formData.getAll("photos").filter((f): f is File => f instanceof File);
   const photos = await readPhotoFiles(photoFiles);
 
   await prisma.homework.create({
     data: {
-      title,
-      description,
-      pages,
-      subjectId: refs.subjectId,
-      topicId: refs.topicId,
-      assignedDate: assignedDateRaw ? new Date(assignedDateRaw) : new Date(),
-      dueDate: dueDateRaw ? new Date(dueDateRaw) : null,
+      ...parsed,
       createdById: session.user.id,
-      photos: {
-        create: photos,
-      },
+      photos: { create: photos },
     },
   });
 
-  revalidatePath("/odevler");
-  revalidatePath("/");
+  revalidateHomeworkPages();
+  return { success: "Ödev eklendi." };
+}
+
+/** Fotoğraflar ayrı yönetildiği için burada sadece metin/tarih alanları güncellenir. */
+export async function updateHomework(
+  _prevState: HomeworkState,
+  formData: FormData
+): Promise<HomeworkState> {
+  await requireSession();
+
+  const id = String(formData.get("id") || "");
+  if (!id) return { error: "Güncellenecek ödev bulunamadı." };
+
+  const existing = await prisma.homework.findUnique({ where: { id }, select: { id: true } });
+  if (!existing) return { error: "Bu ödev silinmiş görünüyor." };
+
+  const parsed = await parseHomeworkForm(formData);
+  if (typeof parsed === "string") return { error: parsed };
+
+  await prisma.homework.update({ where: { id }, data: parsed });
+
+  revalidateHomeworkPages();
+  return { success: "Ödev güncellendi." };
 }
 
 export async function addHomeworkPhotos(id: string, formData: FormData) {
@@ -76,13 +128,11 @@ export async function updateHomeworkStatus(id: string, status: string) {
     where: { id },
     data: { status: status as "BEKLIYOR" | "DEVAM_EDIYOR" | "TAMAMLANDI" },
   });
-  revalidatePath("/odevler");
-  revalidatePath("/");
+  revalidateHomeworkPages();
 }
 
 export async function deleteHomework(id: string) {
   await requireSession();
   await prisma.homework.delete({ where: { id } });
-  revalidatePath("/odevler");
-  revalidatePath("/");
+  revalidateHomeworkPages();
 }

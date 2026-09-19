@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { updateHomeworkStatus, deleteHomework, deleteHomeworkPhoto } from "./actions";
 import AddPhotoButton from "./AddPhotoButton";
+import HomeworkForm, { type HomeworkDraft, type Subject } from "./HomeworkForm";
 import { HOMEWORK_STATUS_LABELS, HOMEWORK_STATUS_COLORS } from "@/lib/labels";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 
@@ -17,15 +18,24 @@ type HomeworkItem = {
   status: string;
   assignedDate: string;
   dueDate: string | null;
+  subjectId: string;
+  topicId: string | null;
   subject: { name: string };
   topic: { name: string } | null;
   photos: Photo[];
   createdBy: Author;
 };
 
-export default function HomeworkList({ items }: { items: HomeworkItem[] }) {
+export default function HomeworkList({
+  items,
+  subjects,
+}: {
+  items: HomeworkItem[];
+  subjects: Subject[];
+}) {
   const [isPending, startTransition] = useTransition();
   const [lightbox, setLightbox] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
     return <p className="text-sm text-gray-500">Henüz ödev eklenmedi.</p>;
@@ -33,7 +43,27 @@ export default function HomeworkList({ items }: { items: HomeworkItem[] }) {
 
   return (
     <ul className="space-y-3">
-      {items.map((hw) => (
+      {items.map((hw) =>
+        editingId === hw.id ? (
+          <li key={hw.id}>
+            <HomeworkForm
+              subjects={subjects}
+              homework={
+                {
+                  id: hw.id,
+                  title: hw.title,
+                  subjectId: hw.subjectId,
+                  topicId: hw.topicId,
+                  pages: hw.pages,
+                  description: hw.description,
+                  assignedDate: hw.assignedDate,
+                  dueDate: hw.dueDate,
+                } satisfies HomeworkDraft
+              }
+              onDone={() => setEditingId(null)}
+            />
+          </li>
+        ) : (
         <li key={hw.id} className="card">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
@@ -59,13 +89,21 @@ export default function HomeworkList({ items }: { items: HomeworkItem[] }) {
                 <p className="mt-1 text-sm text-gray-600">{hw.description}</p>
               )}
             </div>
-            <button
-              disabled={isPending}
-              onClick={() => startTransition(() => deleteHomework(hw.id))}
-              className="shrink-0 text-xs text-gray-400 hover:text-red-600"
-            >
-              Sil
-            </button>
+            <div className="flex shrink-0 flex-col items-end gap-2">
+              <button
+                onClick={() => setEditingId(hw.id)}
+                className="text-xs font-medium text-brand-700 hover:underline"
+              >
+                Düzenle
+              </button>
+              <button
+                disabled={isPending}
+                onClick={() => startTransition(() => deleteHomework(hw.id))}
+                className="text-xs text-gray-400 hover:text-red-600"
+              >
+                Sil
+              </button>
+            </div>
           </div>
 
           {hw.photos.length > 0 && (
@@ -122,7 +160,8 @@ export default function HomeworkList({ items }: { items: HomeworkItem[] }) {
             <AddPhotoButton homeworkId={hw.id} />
           </div>
         </li>
-      ))}
+        )
+      )}
 
       {lightbox && (
         <div
