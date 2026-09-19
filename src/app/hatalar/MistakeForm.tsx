@@ -4,6 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import SubjectTopicSelect from "@/components/SubjectTopicSelect";
 import { createMistake, updateMistake, type MistakeState } from "./actions";
 import { MISTAKE_REASON_LABELS } from "@/lib/labels";
+import AttachmentPicker from "@/components/AttachmentPicker";
 
 const initialState: MistakeState = {};
 
@@ -75,6 +76,19 @@ export default function MistakeForm({
           defaultValue={mistake?.description ?? ""}
         />
       </div>
+
+      {isEdit ? (
+        <p className="text-xs text-gray-400">
+          Dosyaları hata kartındaki &quot;Dosya ekle&quot; düğmesiyle
+          yönetebilirsiniz.
+        </p>
+      ) : (
+        <AttachmentPicker
+          name="files"
+          label="Sorunun fotoğrafı veya PDF'i (opsiyonel)"
+          allowPdf
+        />
+      )}
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
       {state.success && !isEdit && <p className="text-sm text-emerald-600">{state.success}</p>}

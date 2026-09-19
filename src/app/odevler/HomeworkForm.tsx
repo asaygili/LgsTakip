@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import SubjectTopicSelect from "@/components/SubjectTopicSelect";
+import AttachmentPicker from "@/components/AttachmentPicker";
 import { createHomework, updateHomework, type HomeworkState } from "./actions";
 
 const initialState: HomeworkState = {};
@@ -114,16 +115,7 @@ export default function HomeworkForm({
           yönetebilirsiniz.
         </p>
       ) : (
-        <div>
-          <label className="label">Ders fotoğrafı (opsiyonel, birden fazla seçilebilir)</label>
-          <input
-            type="file"
-            name="photos"
-            accept="image/*"
-            multiple
-            className="input file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-brand-700"
-          />
-        </div>
+        <AttachmentPicker name="photos" label="Ders fotoğrafı (opsiyonel)" />
       )}
 
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}

@@ -19,8 +19,8 @@ birlikte takip edebildiği basit bir web uygulaması.
   karışık soran kitap testleri **karma test** olarak işaretlenir: konu alanı
   kapanır ve kayıt konu bazlı analizlere girmez (bkz. aşağıdaki not).
 - **Hatalar**: Yanlış yapılan soruları nedeniyle (bilgi eksiği, dikkatsizlik,
-  zaman yetersizliği, soruyu yanlış anlama, işlem hatası, diğer) kaydetme ve
-  giderildi olarak işaretleme.
+  zaman yetersizliği, soruyu yanlış anlama, işlem hatası, diğer) kaydetme,
+  sorunun fotoğrafını veya PDF'ini ekleme ve giderildi olarak işaretleme.
 - **Konular**: LGS müfredatına göre (Türkçe, Matematik, Fen Bilimleri, T.C.
   İnkılap Tarihi, Din Kültürü, İngilizce) konu listesi ve her konunun
   öğrenilme durumu (başlanmadı / öğreniliyor / tekrar gerekli / öğrenildi).
@@ -134,6 +134,31 @@ npm run start
 `npm run start`, sunucuyu başlatmadan önce `prisma migrate deploy` ve
 seed adımını otomatik çalıştırır.
 
+## Dosya yükleme ve depolama
+
+Ödev kartlarına ders fotoğrafı, hata kayıtlarına da yanlış çözülen sorunun
+fotoğrafı veya PDF'i eklenebilir. Dosyalar diskte değil veritabanında tutulur
+(bkz. *Veri modeli*), bu yüzden boyut doğrudan veritabanını şişirir.
+
+Asıl önlem **yükleme öncesi tarayıcıda sıkıştırma**dır (`src/lib/compress.ts`):
+seçilen fotoğrafın uzun kenarı 1600 piksele indirilir ve JPEG olarak yeniden
+kodlanır. Telefonla çekilmiş 4032×3024, 9,3 MB'lık bir test sayfası fotoğrafı
+bu işlemden **124 KB** olarak çıkar — yaklaşık 77 kat küçülme — ve metin hâlâ
+rahat okunur. Kalite kademeli olarak düşürülür (0.72 → 0.42), hedefin altına
+inen ilk kademe kullanılır; sıkıştırma dosyayı büyütürse orijinali korunur.
+
+Seçim ekranı kazancı yazar (*9.3 MB → 124 KB*), böylece ne yüklendiği
+görünür olur. Sunucu tarafında son bir emniyet kemeri vardır: dosya başına
+**2 MB**, kayıt başına **5 dosya**, yalnızca görsel ve PDF türleri. Bu sınır
+sıkıştırmayı atlatan bir isteği de reddeder.
+
+Ayarlar sayfasında toplam dosya sayısı, kapladıkları yer ve dosya başına
+ortalama boyut yazar; depolama şişmeye başlarsa buradan fark edilir.
+
+Yüklenen dosyalar `/api/photos/<id>` ve `/api/hata-dosyalari/<id>` adresleri
+üzerinden yalnızca giriş yapmış kullanıcılara sunulur; oturumsuz istek 401
+alır.
+
 ## Silme onayı
 
 Hiçbir kayıt tek dokunuşla silinmez. "Sil" düğmesi ekranın ortasında bir onay
@@ -198,8 +223,8 @@ adresi üzerinden yalnızca giriş yapmış kullanıcılara sunulur. Bu sayede
 uygulama kalıcı disk (volume) yapılandırması gerektirmez; yeniden
 başlatmalarda hiçbir veri kaybolmaz.
 
-Fotoğraf başına en fazla 8MB, tek istekte en fazla 20MB kabul edilir
-(`next.config.mjs` → `serverActions`).
+Sıkıştırma sonrası dosya başına en fazla 2 MB, kayıt başına 5 dosya kabul
+edilir; tek istek sınırı 20 MB'dır (`next.config.mjs` → `serverActions`).
 
 ## Sonraki adımlar için öneriler
 

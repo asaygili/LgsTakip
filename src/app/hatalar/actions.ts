@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { resolveSubjectAndTopic } from "@/lib/refs";
 import { MISTAKE_REASON_LABELS } from "@/lib/labels";
+import { readUploadFiles, MAX_FILES_PER_RECORD } from "@/lib/uploads";
 
 export type MistakeState = { error?: string; success?: string };
 
@@ -52,10 +53,43 @@ export async function createMistake(
   const parsed = await parseMistakeForm(formData);
   if (typeof parsed === "string") return { error: parsed };
 
-  await prisma.mistake.create({ data: { ...parsed, userId: session.user.id } });
+  const uploaded = formData.getAll("files").filter((f): f is File => f instanceof File);
+  const files = await readUploadFiles(uploaded, { allowPdf: true });
+
+  await prisma.mistake.create({
+    data: { ...parsed, userId: session.user.id, files: { create: files } },
+  });
 
   revalidateMistakePages();
   return { success: "Hata kaydı eklendi." };
+}
+
+/** Karttan dosya ekleme. Düzenleme formu yalnızca metin alanlarını kapsar. */
+export async function addMistakeFiles(id: string, formData: FormData) {
+  await requireSession();
+
+  const existing = await prisma.mistake.findUnique({
+    where: { id },
+    select: { _count: { select: { files: true } } },
+  });
+  if (!existing) return;
+
+  const room = MAX_FILES_PER_RECORD - existing._count.files;
+  if (room <= 0) return;
+
+  const uploaded = formData.getAll("files").filter((f): f is File => f instanceof File);
+  const files = (await readUploadFiles(uploaded, { allowPdf: true })).slice(0, room);
+  if (files.length === 0) return;
+
+  await prisma.mistake.update({ where: { id }, data: { files: { create: files } } });
+
+  revalidateMistakePages();
+}
+
+export async function deleteMistakeFile(fileId: string) {
+  await requireSession();
+  await prisma.mistakeFile.delete({ where: { id: fileId } });
+  revalidateMistakePages();
 }
 
 export async function updateMistake(

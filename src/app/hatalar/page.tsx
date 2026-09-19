@@ -19,6 +19,10 @@ export default async function HatalarPage() {
         subject: true,
         topic: true,
         user: { select: { name: true, role: true } },
+        files: {
+          select: { id: true, mimeType: true, fileName: true, size: true },
+          orderBy: { createdAt: "asc" },
+        },
       },
       take: 150,
     }),

@@ -115,7 +115,22 @@ model Mistake {
   dailyLog    DailyLog?     @relation(fields: [dailyLogId], references: [id], onDelete: SetNull)
   userId      String
   user        User          @relation(fields: [userId], references: [id])
+  files       MistakeFile[]
   createdAt   DateTime      @default(now())
+}
+
+// Yanlış çözülen sorunun fotoğrafı veya PDF'i. Fotoğraflar tarayıcıda
+// küçültülüp yeniden kodlandıktan sonra yüklenir (bkz. src/lib/compress.ts),
+// bu yüzden veritabanında birkaç yüz kilobayt yer kaplarlar.
+model MistakeFile {
+  id        String   @id @default(cuid())
+  mistakeId String
+  mistake   Mistake  @relation(fields: [mistakeId], references: [id], onDelete: Cascade)
+  mimeType  String
+  fileName  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
 }
 
 model MockExam {
