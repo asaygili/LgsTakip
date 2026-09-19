@@ -37,3 +37,8 @@ export const EXAM_TYPE_LABELS: Record<string, string> = {
   GENEL: "Genel Deneme",
   BRANS: "Branş Denemesi",
 };
+
+export const SCHOOL_TYPE_LABELS: Record<string, string> = {
+  DEVLET: "Devlet",
+  OZEL: "Özel",
+};

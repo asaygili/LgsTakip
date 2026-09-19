@@ -4,11 +4,13 @@ import { useState } from "react";
 import { deleteTargetSchool } from "./actions";
 import TargetSchoolForm, { type SchoolDraft } from "./TargetSchoolForm";
 import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
+import { SCHOOL_TYPE_LABELS } from "@/lib/labels";
 
 type TargetSchoolItem = {
   id: string;
   name: string;
   location: string | null;
+  schoolType: string | null;
   quota: number | null;
   cutoffScore: number | null;
   targetPercentile: number | null;
@@ -83,6 +85,8 @@ export default function TargetSchoolList({
                     id: school.id,
                     name: school.name,
                     location: school.location,
+                    schoolType: school.schoolType,
+                    quota: school.quota,
                     targetPercentile: school.targetPercentile,
                     cutoffScore: school.cutoffScore,
                     note: school.note,
@@ -98,7 +102,14 @@ export default function TargetSchoolList({
         return (
           <li key={school.id} className="card flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-medium text-gray-900">{school.name}</h3>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-medium text-gray-900">{school.name}</h3>
+                {school.schoolType && (
+                  <span className="badge bg-gray-100 text-gray-600">
+                    {SCHOOL_TYPE_LABELS[school.schoolType]}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-gray-500">
                 {school.location ? `${school.location} \u00b7 ` : ""}
                 {school.targetPercentile !== null && `Yüzdelik dilim: ${school.targetPercentile}`}

@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { createTargetSchool, updateTargetSchool, type TargetSchoolState } from "./actions";
+import { SCHOOL_TYPE_LABELS } from "@/lib/labels";
 
 const initialState: TargetSchoolState = {};
 
@@ -9,6 +10,8 @@ export type SchoolDraft = {
   id: string;
   name: string;
   location: string | null;
+  schoolType: string | null;
+  quota: number | null;
   targetPercentile: number | null;
   cutoffScore: number | null;
   note: string | null;
@@ -59,6 +62,35 @@ export default function TargetSchoolForm({
             className="input"
             placeholder="Örn: Ankara / Çankaya"
             defaultValue={school?.location ?? ""}
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Okul türü</label>
+          <select
+            name="schoolType"
+            className="input"
+            defaultValue={school?.schoolType ?? ""}
+          >
+            <option value="">Belirtilmedi</option>
+            {Object.entries(SCHOOL_TYPE_LABELS).map(([value, text]) => (
+              <option key={value} value={value}>
+                {text}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="label">Kontenjan (opsiyonel)</label>
+          <input
+            type="number"
+            name="quota"
+            className="input"
+            min={0}
+            step={1}
+            placeholder="Örn: 120"
+            defaultValue={school?.quota ?? ""}
           />
         </div>
       </div>

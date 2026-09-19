@@ -3,12 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
+import { SCHOOL_TYPE_LABELS } from "@/lib/labels";
 
 export type TargetSchoolState = { error?: string; success?: string };
 
 type ParsedSchoolForm = {
   name: string;
   location: string | null;
+  schoolType: string | null;
+  quota: number | null;
   targetPercentile: number;
   cutoffScore: number | null;
   note: string | null;
@@ -18,6 +21,8 @@ type ParsedSchoolForm = {
 function parseSchoolForm(formData: FormData): ParsedSchoolForm | string {
   const name = String(formData.get("name") || "").trim();
   const location = String(formData.get("location") || "").trim() || null;
+  const typeRaw = String(formData.get("schoolType") || "");
+  const quotaRaw = String(formData.get("quota") || "").trim();
   const percentileRaw = String(formData.get("targetPercentile") || "").replace(",", ".");
   const cutoffScoreRaw = String(formData.get("cutoffScore") || "").replace(",", ".");
   const note = String(formData.get("note") || "").trim() || null;
@@ -34,10 +39,27 @@ function parseSchoolForm(formData: FormData): ParsedSchoolForm | string {
     return "Hedef yüzdelik dilim 0 ile 100 arasında bir sayı olmalı.";
   }
 
+  let quota: number | null = null;
+  if (quotaRaw) {
+    const n = Number(quotaRaw);
+    if (Number.isNaN(n) || n < 0 || !Number.isInteger(n)) {
+      return "Kontenjan 0 veya daha büyük bir tam sayı olmalı.";
+    }
+    quota = n;
+  }
+
   const cutoffScore =
     cutoffScoreRaw && !Number.isNaN(Number(cutoffScoreRaw)) ? Number(cutoffScoreRaw) : null;
 
-  return { name, location, targetPercentile, cutoffScore, note };
+  return {
+    name,
+    location,
+    schoolType: typeRaw in SCHOOL_TYPE_LABELS ? typeRaw : null,
+    quota,
+    targetPercentile,
+    cutoffScore,
+    note,
+  };
 }
 
 export async function createTargetSchool(
@@ -159,6 +181,9 @@ export async function bulkCreateTargetSchools(
   const session = await requireSession();
 
   const text = String(formData.get("bulkText") || "");
+  // Resmi tablolarda devlet/özel sütunu yok; listenin tamamı için tek seçim.
+  const typeRaw = String(formData.get("schoolType") || "");
+  const schoolType = typeRaw in SCHOOL_TYPE_LABELS ? typeRaw : null;
   const lines = text.split("\n");
 
   const valid: ParsedSchool[] = [];
@@ -190,6 +215,7 @@ export async function bulkCreateTargetSchools(
     data: valid.map((v) => ({
       name: v.name,
       location: v.location,
+      schoolType,
       quota: v.quota,
       cutoffScore: v.cutoffScore,
       targetPercentile: v.targetPercentile,

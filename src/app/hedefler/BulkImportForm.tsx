@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useEffect, useState } from "react";
 import { bulkCreateTargetSchools, type BulkImportState } from "./actions";
+import { SCHOOL_TYPE_LABELS } from "@/lib/labels";
 
 const initialState: BulkImportState = {};
 
@@ -47,6 +48,24 @@ Kadıköy Anadolu Lisesi\t2,5\tKardeşimin okulu`}
               placeholder="Tabloyu buraya yapıştırın"
               required
             />
+            <div>
+              <label className="label" htmlFor="bulkSchoolType">
+                Bu listedeki okulların türü
+              </label>
+              <select id="bulkSchoolType" name="schoolType" className="input" defaultValue="">
+                <option value="">Belirtilmedi</option>
+                {Object.entries(SCHOOL_TYPE_LABELS).map(([value, text]) => (
+                  <option key={value} value={value}>
+                    {text}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-xs text-gray-400">
+                Resmi tablolarda devlet/özel sütunu olmadığı için seçim listenin
+                tamamına uygulanır. Tek tek değiştirmek isterseniz okul kartındaki
+                Düzenle düğmesini kullanın.
+              </p>
+            </div>
             {state.error && <p className="text-sm text-red-600">{state.error}</p>}
             {state.added !== undefined && state.added > 0 && (
               <p className="text-sm text-emerald-600">

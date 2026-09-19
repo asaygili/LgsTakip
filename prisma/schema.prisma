@@ -14,6 +14,7 @@ datasource db {
 // TopicStatus: BASLANMADI | OGRENILIYOR | TEKRAR_GEREKLI | OGRENILDI
 // MistakeReason: BILGI_EKSIGI | DIKKATSIZLIK | ZAMAN_YETERSIZLIGI | SORUYU_YANLIS_ANLAMA | ISLEM_HATASI | DIGER
 // ExamType: GENEL | BRANS
+// SchoolType: DEVLET | OZEL
 
 model User {
   id           String     @id @default(cuid())
@@ -162,6 +163,8 @@ model TargetSchool {
   id               String   @id @default(cuid())
   name             String
   location         String?
+  // SchoolType: DEVLET | OZEL (belirtilmemişse null)
+  schoolType       String?
   quota            Int?
   cutoffScore      Float?
   targetPercentile Float?

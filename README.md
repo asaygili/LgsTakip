@@ -27,8 +27,11 @@ birlikte takip edebildiği basit bir web uygulaması.
 - **Denemeler**: Deneme sınavı sonuçlarını ders bazında kaydetme, net
   hesaplama, MEB katsayılarıyla tahmini LGS puanı ve geçmiş sonuçları
   listeleme.
-- **Hedefler**: Hedef liseleri taban puanıyla birlikte kaydetme ve en son
-  denemenin tahmini puanıyla karşılaştırma.
+- **Hedefler**: Hedef liseleri türü (devlet / özel), kontenjanı, taban puanı ve
+  yüzdelik dilimiyle kaydetme; en son denemenin tahmini puanıyla karşılaştırma.
+  MEB taban puan tablosu olduğu gibi yapıştırılarak toplu eklenebilir; okul
+  türü seçimi o listenin tamamına uygulanır (resmi tablolarda devlet/özel
+  sütunu yoktur), tek tek değiştirmek için okul kartındaki *Düzenle* kullanılır.
 - **Analiz**: Bu haftaki hedefin gerçekleşme özeti, son 8 haftanın hedefe
   ulaşma oranı, **ders bazında konu durumu** (hangi dersin yüzde kaçı
   öğrenildi / öğreniliyor / tekrar gerekli / başlanmadı), zayıf konu radarı,
