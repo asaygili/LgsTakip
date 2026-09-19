@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { deleteMockExam } from "./actions";
 import MockExamForm, { type ExamDraft, type Subject } from "./MockExamForm";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 import CreatedAt from "@/components/CreatedAt";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 import { EXAM_TYPE_LABELS } from "@/lib/labels";
 import { netOf, calculateLgsPuan } from "@/lib/lgs";
 
@@ -35,7 +36,6 @@ export default function MockExamList({
   items: ExamItem[];
   subjects: Subject[];
 }) {
-  const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
@@ -118,13 +118,13 @@ export default function MockExamList({
                 >
                   Düzenle
                 </button>
-                <button
-                  disabled={isPending}
-                  onClick={() => startTransition(() => deleteMockExam(exam.id))}
-                  className="text-xs text-gray-400 hover:text-red-600"
-                >
-                  Sil
-                </button>
+                <ConfirmDeleteButton
+                  title="Bu deneme silinsin mi?"
+                  description={`${exam.name} · ${new Date(exam.date).toLocaleDateString(
+                    "tr-TR"
+                  )} · ${exam.results.length} ders sonucu`}
+                  onConfirm={() => deleteMockExam(exam.id)}
+                />
               </div>
             </div>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">

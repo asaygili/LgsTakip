@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { deleteDailyLog } from "./actions";
 import DailyLogForm, { type LogDraft, type Subject } from "./DailyLogForm";
 import { netOf } from "@/lib/lgs";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 import CreatedAt from "@/components/CreatedAt";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 
 type LogItem = {
   id: string;
@@ -31,7 +32,6 @@ export default function DailyLogList({
   items: LogItem[];
   subjects: Subject[];
 }) {
-  const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
@@ -99,13 +99,13 @@ export default function DailyLogList({
               >
                 Düzenle
               </button>
-              <button
-                disabled={isPending}
-                onClick={() => startTransition(() => deleteDailyLog(log.id))}
-                className="text-xs text-gray-400 hover:text-red-600"
-              >
-                Sil
-              </button>
+              <ConfirmDeleteButton
+                title="Bu soru kaydı silinsin mi?"
+                description={`${log.subject.name}${
+                  log.topic ? ` · ${log.topic.name}` : ""
+                } · ${new Date(log.date).toLocaleDateString("tr-TR")} · ${total} soru`}
+                onConfirm={() => deleteDailyLog(log.id)}
+              />
             </div>
           </li>
         );

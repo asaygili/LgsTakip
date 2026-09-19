@@ -134,6 +134,17 @@ npm run start
 `npm run start`, sunucuyu başlatmadan önce `prisma migrate deploy` ve
 seed adımını otomatik çalıştırır.
 
+## Silme onayı
+
+Hiçbir kayıt tek dokunuşla silinmez. "Sil" düğmesi ekranın ortasında bir onay
+penceresi açar; pencere neyin silineceğini yazar (ör. *Matematik · 19.09.2026 ·
+20 soru*) ve işlemin geri alınamayacağını hatırlatır. Onay düğmesi listedeki
+"Sil" düğmesinden bambaşka bir yerde çıktığı için yanlışlıkla değen parmak
+kaydı silemez. Pencere *Vazgeç* ile, dışına dokunarak veya Esc tuşuyla kapanır.
+
+Aynı onay ödev, soru, hata, deneme, hedef okul ve ödev fotoğrafı silmede
+geçerlidir.
+
 ## Liste sıralaması
 
 Ödevler, Sorular, Hatalar ve Denemeler listeleri **girilme sırasına göre eskiden

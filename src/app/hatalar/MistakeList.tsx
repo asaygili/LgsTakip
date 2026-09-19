@@ -6,6 +6,7 @@ import MistakeForm, { type MistakeDraft, type Subject } from "./MistakeForm";
 import { MISTAKE_REASON_LABELS } from "@/lib/labels";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 import CreatedAt from "@/components/CreatedAt";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 
 type MistakeItem = {
   id: string;
@@ -89,13 +90,13 @@ export default function MistakeList({
               >
                 Düzenle
               </button>
-              <button
-                disabled={isPending}
-                onClick={() => startTransition(() => deleteMistake(m.id))}
-                className="text-xs text-gray-400 hover:text-red-600"
-              >
-                Sil
-              </button>
+              <ConfirmDeleteButton
+                title="Bu hata kaydı silinsin mi?"
+                description={`${m.subject.name}${m.topic ? ` · ${m.topic.name}` : ""} · ${
+                  MISTAKE_REASON_LABELS[m.reason] ?? m.reason
+                }`}
+                onConfirm={() => deleteMistake(m.id)}
+              />
             </div>
           </div>
         </li>

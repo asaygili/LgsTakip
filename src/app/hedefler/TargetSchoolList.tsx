@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { deleteTargetSchool } from "./actions";
 import TargetSchoolForm, { type SchoolDraft } from "./TargetSchoolForm";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 
 type TargetSchoolItem = {
   id: string;
@@ -64,7 +65,6 @@ export default function TargetSchoolList({
   studentPuan: number | null;
   studentPercentile: number | null;
 }) {
-  const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<string | null>(null);
 
   if (items.length === 0) {
@@ -115,13 +115,11 @@ export default function TargetSchoolList({
               >
                 Düzenle
               </button>
-              <button
-                disabled={isPending}
-                onClick={() => startTransition(() => deleteTargetSchool(school.id))}
-                className="text-xs text-gray-400 hover:text-red-600"
-              >
-                Sil
-              </button>
+              <ConfirmDeleteButton
+                title="Bu hedef okul silinsin mi?"
+                description={`${school.name}${school.location ? ` · ${school.location}` : ""}`}
+                onConfirm={() => deleteTargetSchool(school.id)}
+              />
             </div>
           </li>
         );

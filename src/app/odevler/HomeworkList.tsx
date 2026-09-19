@@ -8,6 +8,7 @@ import HomeworkForm, { type HomeworkDraft, type Subject } from "./HomeworkForm";
 import { HOMEWORK_STATUS_LABELS, HOMEWORK_STATUS_COLORS } from "@/lib/labels";
 import AuthorBadge, { type Author } from "@/components/AuthorBadge";
 import CreatedAt from "@/components/CreatedAt";
+import ConfirmDeleteButton from "@/components/ConfirmDeleteButton";
 
 type Photo = { id: string };
 
@@ -99,13 +100,13 @@ export default function HomeworkList({
               >
                 Düzenle
               </button>
-              <button
-                disabled={isPending}
-                onClick={() => startTransition(() => deleteHomework(hw.id))}
-                className="text-xs text-gray-400 hover:text-red-600"
-              >
-                Sil
-              </button>
+              <ConfirmDeleteButton
+                title="Bu ödev silinsin mi?"
+                description={`${hw.title} · ${hw.subject.name}${
+                  hw.photos.length > 0 ? ` · ${hw.photos.length} fotoğraf` : ""
+                }`}
+                onConfirm={() => deleteHomework(hw.id)}
+              />
             </div>
           </div>
 
@@ -127,15 +128,14 @@ export default function HomeworkList({
                       unoptimized
                     />
                   </button>
-                  <button
-                    type="button"
-                    disabled={isPending}
-                    onClick={() => startTransition(() => deleteHomeworkPhoto(photo.id))}
-                    className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-gray-900/80 text-xs text-white group-hover:flex"
-                    title="Fotoğrafı sil"
-                  >
-                    ×
-                  </button>
+                  <ConfirmDeleteButton
+                    label="×"
+                    ariaLabel="Fotoğrafı sil"
+                    title="Bu fotoğraf silinsin mi?"
+                    description={`${hw.title} ödevinin fotoğrafı`}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900/80 text-xs text-white"
+                    onConfirm={() => deleteHomeworkPhoto(photo.id)}
+                  />
                 </div>
               ))}
             </div>
