@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import SubjectTopicSelect from "@/components/SubjectTopicSelect";
 import { createDailyLog, updateDailyLog, type DailyLogState } from "./actions";
 
@@ -13,6 +13,7 @@ export type LogDraft = {
   id: string;
   subjectId: string;
   topicId: string | null;
+  isMixed: boolean;
   /** ISO tarih; <input type="date"> için ilk 10 karakteri kullanılır. */
   date: string;
   questionsCorrect: number;
@@ -42,11 +43,16 @@ export default function DailyLogForm({
     initialState
   );
   const formRef = useRef<HTMLFormElement>(null);
+  const [isMixed, setIsMixed] = useState(log?.isMixed ?? false);
 
   useEffect(() => {
     if (!state.success) return;
-    if (isEdit) onDone?.();
-    else formRef.current?.reset();
+    if (isEdit) {
+      onDone?.();
+    } else {
+      formRef.current?.reset();
+      setIsMixed(false);
+    }
   }, [state.success, isEdit, onDone]);
 
   return (
@@ -59,7 +65,26 @@ export default function DailyLogForm({
         subjects={subjects}
         defaultSubjectId={log?.subjectId}
         defaultTopicId={log?.topicId}
+        topicDisabled={isMixed}
+        topicDisabledHint="Karma test"
       />
+      <label className="flex items-start gap-2 text-sm text-gray-700">
+        <input
+          type="checkbox"
+          name="isMixed"
+          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-600"
+          checked={isMixed}
+          onChange={(e) => setIsMixed(e.target.checked)}
+        />
+        <span>
+          Karma test (birden fazla konu)
+          <span className="block text-xs text-gray-500">
+            Tek konuya bağlanmadığı için konu bazlı analizlere girmez. Yanlışların
+            hangi konudan olduğunu Hatalar sayfasına girerseniz zayıf konu radarına
+            yansır.
+          </span>
+        </span>
+      </label>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="label">Tarih</label>

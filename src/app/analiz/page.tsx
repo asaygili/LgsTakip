@@ -259,6 +259,14 @@ export default async function AnalizPage() {
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
 
+  // Karma testler tek konuya bağlanmadığı için radara girmez; kullanıcı
+  // bunun farkında olsun diye hacmini yazıyoruz.
+  const mixedLogs = dailyLogs.filter((l) => l.isMixed);
+  const mixedQuestionCount = mixedLogs.reduce(
+    (s, l) => s + l.questionsCorrect + l.questionsWrong + l.questionsBlank,
+    0
+  );
+
   const hasExams = scorePoints.length > 0;
 
   return (
@@ -358,6 +366,16 @@ export default async function AnalizPage() {
             Yanlış sayısı ve çözülmemiş hata kayıtlarına göre en çok puan kaybettiren
             konular.
           </p>
+          {mixedLogs.length > 0 && (
+            <p className="mt-1 text-xs text-gray-400">
+              {mixedLogs.length} karma test kaydı ({mixedQuestionCount} soru) tek konuya
+              bağlanmadığı için buraya dahil değil. O testlerdeki yanlışları{" "}
+              <Link href="/hatalar" className="font-medium text-brand-700 underline">
+                Hatalar
+              </Link>{" "}
+              sayfasına girerseniz radara yansır.
+            </p>
+          )}
           <ol className="mt-3 space-y-2">
             {weakTopics.map((t, i) => (
               <li key={t.topic} className="flex items-start justify-between gap-3">

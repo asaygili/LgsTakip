@@ -89,6 +89,9 @@ model DailyLog {
   questionsBlank   Int       @default(0)
   durationMinutes  Int?
   notes            String?
+  // Karma test: birden fazla konuyu karışık soran kitap testleri. Tek bir
+  // konuya bağlanamadığı için konu bazlı analizlere dahil edilmez.
+  isMixed          Boolean   @default(false)
   subjectId        String
   subject          Subject   @relation(fields: [subjectId], references: [id])
   topicId          String?

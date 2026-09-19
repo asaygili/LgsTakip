@@ -15,7 +15,9 @@ birlikte takip edebildiği basit bir web uygulaması.
   (telefondan yeni fotoğraf çekebilir veya galerideki bir fotoğrafı
   seçebilirsiniz).
 - **Sorular**: Günlük çözülen soruları ders/konu bazında doğru/yanlış/boş
-  olarak kaydetme, net hesaplama, süre ve not ekleme.
+  olarak kaydetme, net hesaplama, süre ve not ekleme. Birden fazla konuyu
+  karışık soran kitap testleri **karma test** olarak işaretlenir: konu alanı
+  kapanır ve kayıt konu bazlı analizlere girmez (bkz. aşağıdaki not).
 - **Hatalar**: Yanlış yapılan soruları nedeniyle (bilgi eksiği, dikkatsizlik,
   zaman yetersizliği, soruyu yanlış anlama, işlem hatası, diğer) kaydetme ve
   giderildi olarak işaretleme.
@@ -131,6 +133,22 @@ npm run start
 
 `npm run start`, sunucuyu başlatmadan önce `prisma migrate deploy` ve
 seed adımını otomatik çalıştırır.
+
+## Karma testler
+
+Bazı test kitapları bir testte birden fazla konuyu karışık sorar. Böyle bir
+kaydı tek bir konuya bağlamak analizi yanıltır: 20 soruluk karma testteki 4
+yanlışı tek konuya yazmak o konuyu haksız yere zayıf gösterir.
+
+Bu yüzden kayıt **karma test** olarak işaretlenir. Soru sayıları, net, süre,
+haftalık hedef ilerlemesi ve doğruluk oranı gibi her şey normal işler; kayıt
+yalnızca **Zayıf Konu Radarı** ve konu bazlı yanlış dağılımına girmez. Analiz
+sayfası kaç karma test kaydı olduğunu ve kaç soru içerdiğini yazar, böylece
+dışarıda kalan hacim görünür olur.
+
+Karma testteki yanlışların hangi konudan geldiğini biliyorsanız **Hatalar**
+sayfasına tek tek girin: orada konu ve neden birlikte tutulur ve radarda
+yanlış sayısına göre 3 kat ağırlık taşır.
 
 ## Haftalık hedefler nasıl sayılır?
 

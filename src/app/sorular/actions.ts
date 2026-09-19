@@ -10,6 +10,7 @@ export type DailyLogState = { error?: string; success?: string };
 type ParsedLog = {
   subjectId: string;
   topicId: string | null;
+  isMixed: boolean;
   date: Date;
   questionsCorrect: number;
   questionsWrong: number;
@@ -27,7 +28,9 @@ function revalidateLogPages() {
 /** Form alanlarını okur; eksik/geçersizse hata mesajı döndürür. */
 async function parseLogForm(formData: FormData): Promise<ParsedLog | string> {
   const subjectId = String(formData.get("subjectId") || "");
-  const topicId = String(formData.get("topicId") || "") || null;
+  const isMixed = formData.get("isMixed") === "on";
+  // Karma testte konu alanı kapalı gelir; yine de gelirse yok sayarız.
+  const topicId = isMixed ? null : String(formData.get("topicId") || "") || null;
   const dateRaw = String(formData.get("date") || "");
   const correct = Number(formData.get("correct") || 0);
   const wrong = Number(formData.get("wrong") || 0);
@@ -48,6 +51,7 @@ async function parseLogForm(formData: FormData): Promise<ParsedLog | string> {
   return {
     subjectId: refs.subjectId,
     topicId: refs.topicId,
+    isMixed,
     date: new Date(dateRaw),
     questionsCorrect: Math.max(0, correct),
     questionsWrong: Math.max(0, wrong),

@@ -11,12 +11,17 @@ export default function SubjectTopicSelect({
   topicOptional = true,
   defaultSubjectId,
   defaultTopicId,
+  topicDisabled = false,
+  topicDisabledHint,
 }: {
   subjects: Subject[];
   required?: boolean;
   topicOptional?: boolean;
   defaultSubjectId?: string;
   defaultTopicId?: string | null;
+  /** Karma test gibi tek konuya bağlanamayan kayıtlarda konu seçimi kapatılır. */
+  topicDisabled?: boolean;
+  topicDisabledHint?: string;
 }) {
   const [subjectId, setSubjectId] = useState(
     defaultSubjectId ?? subjects[0]?.id ?? ""
@@ -48,13 +53,16 @@ export default function SubjectTopicSelect({
       </div>
       <div>
         <label className="label">Konu {topicOptional && "(opsiyonel)"}</label>
+        {/* Kapalıyken select disabled olur; tarayıcı disabled alanı göndermez,
+            böylece kayda konu yazılmaz. */}
         <select
           name="topicId"
-          className="input"
-          value={topicId}
+          className="input disabled:bg-gray-100 disabled:text-gray-400"
+          value={topicDisabled ? "" : topicId}
+          disabled={topicDisabled}
           onChange={(e) => setTopicId(e.target.value)}
         >
-          <option value="">Seçilmedi</option>
+          <option value="">{topicDisabled ? (topicDisabledHint ?? "-") : "Seçilmedi"}</option>
           {selectedSubject?.topics.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name}

@@ -10,6 +10,7 @@ type LogItem = {
   id: string;
   subjectId: string;
   topicId: string | null;
+  isMixed: boolean;
   date: string;
   questionsCorrect: number;
   questionsWrong: number;
@@ -43,6 +44,7 @@ export default function DailyLogList({
             id: log.id,
             subjectId: log.subjectId,
             topicId: log.topicId,
+            isMixed: log.isMixed,
             date: log.date,
             questionsCorrect: log.questionsCorrect,
             questionsWrong: log.questionsWrong,
@@ -69,6 +71,9 @@ export default function DailyLogList({
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-medium text-gray-900">{log.subject.name}</span>
                 {log.topic && <span className="text-gray-500">· {log.topic.name}</span>}
+                {log.isMixed && (
+                  <span className="badge bg-amber-50 text-amber-700">Karma test</span>
+                )}
                 <span className="text-xs text-gray-400">
                   {new Date(log.date).toLocaleDateString("tr-TR")}
                 </span>
