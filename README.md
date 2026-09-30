@@ -39,7 +39,8 @@ birlikte takip edebildiği basit bir web uygulaması.
   net, haftalık doğruluk oranı, hata nedeni dağılımı ve konu bazlı hata
   sayısı. Her grafiğin sağ üstündeki *Tablo* düğmesiyle aynı veri sayı sayı da
   okunabilir.
-- **Ayarlar**: Şifre değiştirme ve haftalık hedef belirleme — soru sayısı,
+- **Ayarlar**: Tüm verileri tek ZIP olarak indiren yedek alma düğmesi, depolama
+  özeti, şifre değiştirme ve haftalık hedef belirleme — soru sayısı,
   çalışma süresi (dakika) ve deneme sayısı. Hedef girildiğinde panelde
   ilerleme çubuğu ve "ne kadar eksik kaldı" bilgisi çıkar; iki gündür kayıt
   girilmemişse panel uyarı gösterir.
@@ -136,6 +137,24 @@ npm run start
 
 `npm run start`, sunucuyu başlatmadan önce `prisma migrate deploy` ve
 seed adımını otomatik çalıştırır.
+
+## Yedek alma
+
+Ayarlar sayfasındaki **Yedeği İndir** düğmesi tüm verileri tek bir ZIP olarak
+indirir: `veriler.json` (ödevler, soru kayıtları, hatalar, denemeler ve ders
+sonuçları, hedef okullar, konu durumları, haftalık hedef, kullanıcılar) ve
+`dosyalar/` klasöründe yüklenmiş tüm fotoğraf ve PDF'ler. JSON içindeki her
+dosya kaydı kendi `dosya` alanıyla ZIP içindeki karşılığını gösterir, böylece
+geri yükleme eşleştirebilir. Şifre özetleri yedeğe **dahil edilmez**.
+
+Dosya adı tarihlidir (`lgs-takip-yedek-2026-09-30.zip`), böylece birden fazla
+yedek yan yana durabilir. Ayda bir indirip telefonda veya bilgisayarda saklamak,
+barındırma sağlayıcısında bir sorun çıkması ihtimaline karşı yeterlidir.
+
+ZIP, bağımlılık eklemeden `src/lib/zip.ts` içinde üretilir. Dosyalar
+sıkıştırılmadan ("store") yazılır — içerideki fotoğraflar zaten JPEG. Arşiv akış
+olarak üretildiği için aynı anda yalnızca tek bir dosya bellekte tutulur; yedek
+büyüdükçe sunucunun belleği şişmez.
 
 ## Dosya yükleme ve depolama
 
@@ -239,5 +258,6 @@ edilir; tek istek sınırı 20 MB'dır (`next.config.mjs` → `serverActions`).
 - Tek bir konunun zaman içindeki doğruluk değişimi
 - Öğrenci ve veli için ayrı görünümler (ör. öğrenci sadece kendi girişini
   yapabilsin, veli tüm geçmişi görsün)
-- Verileri **dışa aktarma** (CSV/PDF) — veliyle veya özel derslerle
-  paylaşmak için
+- Yedekten **geri yükleme** (şu an yedek alınabiliyor, geri yükleme elle
+  yapılıyor)
+- Verileri **CSV/PDF olarak dışa aktarma** — özel derslerle paylaşmak için
